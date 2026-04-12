@@ -1,53 +1,107 @@
-# React + TypeScript + Vite
+# 🪐 Solar System 3D
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interaktywna, trójwymiarowa wizualizacja Układu Słonecznego zbudowana w technologii WebGL. Aplikacja pozwala eksplorować planety w czasie rzeczywistym — obracać widok, klikać na planety, czytać ich historię oraz obserwować efekty takie jak cień dnia i nocy na Ziemi, poświata Słońca czy animowane orbity w stylu sci-fi.
 
-Currently, two official plugins are available:
+## ✨ Co znajdziesz w aplikacji
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Interaktywna scena 3D** — obracaj i przybliżaj układ za pomocą myszy lub dotyku
+- **Planety z teksturami** — Słońce, Merkury, Ziemia (z efektem dnia/nocy), Księżyc, Mars
+- **Animowane orbity** — pulsujące linie z podświetleniem w stylu holograficznym
+- **Panel informacyjny** — po kliknięciu planety pojawia się opis, statystyki i ciekawostka
+- **Storytelling** — rozbudowane karty historyczne z odkryciami, wskaźnikiem zamieszkiwalności i galerią zdjęć
+- **Linia odległości** — po wybraniu planety rysuje się linia od Słońca z podaną odległością w km
+- **Muzyka ambient** — subtelna muzyka kosmiczna w tle z możliwością wyciszenia
+- **Czcionka sci-fi** — interfejs oparty na fontach Orbitron i Exo 2
 
-## React Compiler
+## 🛠️ Technologie
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Technologia | Opis |
+|---|---|
+| React 19 + TypeScript | Komponenty UI i logika aplikacji |
+| Three.js + React Three Fiber | Renderowanie sceny 3D |
+| @react-three/drei | Pomocnicze komponenty 3D (OrbitControls, Html, tekstury) |
+| Framer Motion | Animacje przejść UI |
+| Tailwind CSS 4 | Stylowanie interfejsu |
+| Vite | Szybki bundler i serwer deweloperski |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Jak uruchomić aplikację — krok po kroku (dla laika)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Czego potrzebujesz
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Przed startem upewnij się, że masz zainstalowane dwa programy:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Visual Studio Code** — darmowy edytor kodu → [pobierz tutaj](https://code.visualstudio.com/)
+2. **Node.js** (wersja 18 lub nowsza) — środowisko uruchomieniowe → [pobierz tutaj](https://nodejs.org/)
+
+> Jak sprawdzić czy Node.js jest zainstalowany? Otwórz terminal i wpisz `node -v`. Jeśli zobaczysz numer wersji (np. `v20.11.0`), wszystko jest w porządku.
+
+---
+
+### Krok 1 — Otwórz folder projektu w VS Code
+
+1. Uruchom **Visual Studio Code**
+2. W górnym menu kliknij **File → Open Folder...**
+3. Wybierz folder z projektem (np. `solar-system-3d`) i kliknij **Wybierz folder**
+
+---
+
+### Krok 2 — Otwórz terminal w VS Code
+
+1. W górnym menu kliknij **Terminal → New Terminal**
+2. Na dole ekranu pojawi się okno terminala — to tutaj będziesz wpisywać polecenia
+
+---
+
+### Krok 3 — Zainstaluj zależności
+
+W terminalu wpisz poniższe polecenie i naciśnij **Enter**:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+> Poczekaj chwilę — Node.js pobierze wszystkie biblioteki potrzebne do działania aplikacji. Może to zająć od kilku sekund do kilku minut.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
+---
+
+### Krok 4 — Uruchom aplikację
+
+Po zakończeniu instalacji wpisz:
+
+```bash
+npm run dev
+```
+
+> W terminalu pojawi się adres, np. `http://localhost:5173`
+
+---
+
+### Krok 5 — Otwórz w przeglądarce
+
+1. Przytrzymaj **Ctrl** i kliknij na adres wyświetlony w terminalu (np. `http://localhost:5173`)
+2. Aplikacja otworzy się w Twojej domyślnej przeglądarce
+3. Gotowe — eksploruj Układ Słoneczny! 🪐
+
+---
+
+### Zatrzymanie aplikacji
+
+Aby wyłączyć serwer, kliknij w okno terminala i naciśnij **Ctrl + C**.
+
+---
+
+## 📁 Struktura projektu
+
+```
+solar-system-3d/
+├── public/
+│   ├── ambient/        # Pliki audio (muzyka tła)
+│   └── textures/       # Tekstury planet (PNG)
+└── src/
+    └── App.tsx         # Cały kod aplikacji
+```
 import reactDom from 'eslint-plugin-react-dom'
 
 export default defineConfig([
