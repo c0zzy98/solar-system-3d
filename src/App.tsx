@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Html, Line, OrbitControls, useTexture } from '@react-three/drei'
+import { Html, OrbitControls, useTexture } from '@react-three/drei'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
@@ -477,6 +477,92 @@ function CameraController({
   return null
 }
 
+// ─── Sci-Fi Orbit Ring ────────────────────────────────────────────────────
+
+const ORBIT_VERT = `
+  attribute float aAngle;
+  uniform float time;
+  uniform float pulseSpeed;
+  varying float vAlpha;
+  #define PI2 6.2831853
+  void main() {
+    float n = aAngle / PI2;
+    float t = mod(n - time * pulseSpeed, 1.0);
+    float pulse = exp(-t * t * 22.0) * 2.1;
+    float dash = step(0.38, fract(n * 32.0));
+    vAlpha = 0.11 * dash + pulse * 0.78;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+const ORBIT_FRAG = `
+  uniform vec3 orbitColor;
+  varying float vAlpha;
+  void main() {
+    vec3 c = mix(orbitColor, vec3(0.55, 0.88, 1.0), 0.28);
+    gl_FragColor = vec4(c, clamp(vAlpha, 0.0, 1.0));
+  }
+`
+
+function SciFiOrbitRing({
+  radius,
+  color,
+  pulseSpeed = 0.07,
+}: {
+  radius: number
+  color: string
+  pulseSpeed?: number
+}) {
+  const matRef = useRef<THREE.ShaderMaterial>(null)
+  const N = 512
+
+  const { positions, angles } = useMemo(() => {
+    const pos = new Float32Array(N * 3)
+    const ang = new Float32Array(N)
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2
+      pos[i * 3] = Math.cos(a) * radius
+      pos[i * 3 + 1] = 0
+      pos[i * 3 + 2] = Math.sin(a) * radius
+      ang[i] = a
+    }
+    return { positions: pos, angles: ang }
+  }, [radius])
+
+  const uniforms = useMemo(
+    () => ({
+      time: { value: 0 },
+      orbitColor: { value: new THREE.Color(color) },
+      pulseSpeed: { value: pulseSpeed },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  useFrame(({ clock }) => {
+    if (matRef.current) matRef.current.uniforms.time.value = clock.getElapsedTime()
+  })
+
+  return (
+    <lineLoop>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-aAngle" args={[angles, 1]} />
+      </bufferGeometry>
+      <shaderMaterial
+        ref={matRef}
+        uniforms={uniforms}
+        vertexShader={ORBIT_VERT}
+        fragmentShader={ORBIT_FRAG}
+        transparent
+        depthWrite={false}
+      />
+    </lineLoop>
+  )
+}
+
+// ─── Solar System Scene ───────────────────────────────────────────────────
+
 type SolarSystemSceneProps = {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
@@ -488,39 +574,16 @@ function SolarSystemScene({
   onPlanetClick,
   planetPositionsRef,
 }: SolarSystemSceneProps) {
-  const orbits = useMemo(() => {
-    return PLANETS.filter((p) => p.orbitRadius && p.id !== 'moon').map((planet) => {
-      const radius = planet.orbitRadius as number
-      const points: [number, number, number][] = []
-      for (let i = 0; i <= 128; i++) {
-        const angle = (i / 128) * Math.PI * 2
-        points.push([Math.cos(angle) * radius, 0, Math.sin(angle) * radius])
-      }
-      return { id: planet.id, points }
-    })
-  }, [])
-
-  const moonRingPoints = useMemo<[number, number, number][]>(() => {
-    const pts: [number, number, number][] = []
-    for (let i = 0; i <= 64; i++) {
-      const a = (i / 64) * Math.PI * 2
-      pts.push([Math.cos(a) * MOON_ORBIT_RADIUS, 0, Math.sin(a) * MOON_ORBIT_RADIUS])
-    }
-    return pts
-  }, [])
-
   const moonData = PLANETS.find((p) => p.id === 'moon')!
 
   return (
     <group rotation={[0, 0, 0]}>
-      {orbits.map((orbit) => (
-        <Line
-          key={orbit.id}
-          points={orbit.points}
-          color="rgba(255,255,255,0.18)"
-          transparent
-          opacity={0.25}
-          lineWidth={1}
+      {PLANETS.filter((p) => p.orbitRadius && p.id !== 'moon').map((planet) => (
+        <SciFiOrbitRing
+          key={planet.id}
+          radius={planet.orbitRadius!}
+          color={planet.color}
+          pulseSpeed={(planet.orbitSpeed ?? 0.05) * 0.48}
         />
       ))}
 
@@ -534,12 +597,10 @@ function SolarSystemScene({
         >
           {planet.id === 'earth' && (
             <>
-              <Line
-                points={moonRingPoints}
-                color="rgba(255,255,255,0.12)"
-                transparent
-                opacity={0.18}
-                lineWidth={0.5}
+              <SciFiOrbitRing
+                radius={MOON_ORBIT_RADIUS}
+                color="#c8c8d8"
+                pulseSpeed={0.14}
               />
               <AnimatedMoon
                 moon={moonData}
