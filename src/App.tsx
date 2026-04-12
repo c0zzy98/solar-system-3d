@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 
-type PlanetId = 'sun' | 'mercury' | 'earth' | 'moon' | 'mars'
+type PlanetId = 'sun' | 'mercury' | 'earth' | 'moon' | 'mars' | 'jupiter' | 'saturn' | 'uranus' | 'neptune' | 'pluto'
 
 type HabitabilityRating = 'good' | 'ok' | 'bad'
 
@@ -29,6 +29,8 @@ type PlanetData = {
   orbitSpeed?: number
   rotationSpeed?: number
   texturePath?: string
+  ringTexturePath?: string
+  gradientColors?: string[]
   description: string
   subtitle: string
   fact: string
@@ -267,6 +269,245 @@ const PLANETS: PlanetData[] = [
       ],
     },
   },
+  {
+    id: 'jupiter',
+    name: 'Jowisz',
+    color: '#c88b3a',
+    size: 0.78,
+    position: [8.8, 0, 0],
+    labelOffset: [0, -1.1, 0],
+    orbitRadius: 8.8,
+    orbitSpeed: 0.030,
+    rotationSpeed: 0.19,
+    texturePath: '/textures/jupiter.png',
+    description:
+      'Jowisz to największa planeta Układu Słonecznego — gazowy gigant, którego masa przekracza masę wszystkich pozostałych planet razem wziętych. Bada go sonda Juno.',
+    subtitle: 'Największy olbrzym gazowy naszego układu.',
+    fact: 'Wielka Czerwona Plama to antycyklon o rozmiarach Ziemi, trwający ponad 350 lat.',
+    stats: [
+      { label: 'Doba', value: '9h 56m' },
+      { label: 'Księżyce', value: '95' },
+      { label: 'Masa', value: '318× Ziemia' },
+    ],
+    story: {
+      discovery: [
+        { year: 'Starożytność', event: 'Jowisz znany od tysięcy lat — Babilończycy śledzili go jako „Marduka", boga piorunów.' },
+        { year: '1610', event: 'Galileusz odkrywa cztery duże księżyce: Io, Europę, Ganimedesa i Kallisto — pierwsze ciała krążące nie wokół Ziemi.' },
+        { year: '1665', event: 'Giovanni Cassini obserwuje Wielką Czerwoną Plamę — burzę, która trwa do dziś.' },
+        { year: '1973–74', event: 'Pioneer 10 i 11 wykonują pierwsze bliskie przeloty, mierząc pole magnetyczne planety.' },
+        { year: '1979', event: 'Voyager 1 i 2 odkrywają aktywne wulkany na Io i cienkie pierścienie Jowisza.' },
+        { year: '1994', event: 'Kometa Shoemaker-Levy 9 rozbija się o Jowisza — pierwsze bezpośrednio obserwowane zderzenie w Układzie Słonecznym.' },
+        { year: '1995–2003', event: 'Sonda Galileo spędza 8 lat na orbicie, badając atmosferę i lodowe księżyce.' },
+        { year: 'Dziś', event: 'Sonda Juno (od 2016) bada wnętrze i bieguny z rekordowo bliskiej orbity polarnej.' },
+      ],
+      habitability: {
+        score: 2,
+        label: 'Niemożliwa do zamieszkania',
+        factors: [
+          { name: 'Temperatura', value: '-110°C (chmury)', rating: 'bad' },
+          { name: 'Atmosfera', value: 'Wodór 89%, hel 10%', rating: 'bad' },
+          { name: 'Powierzchnia', value: 'Brak stałej', rating: 'bad' },
+          { name: 'Grawitacja', value: '24.8 m/s² (2.5× Ziemia)', rating: 'bad' },
+          { name: 'Promieniowanie', value: 'Pasy Van Allena', rating: 'bad' },
+          { name: 'Ciśnienie', value: 'Kolosalne w głębi', rating: 'bad' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg/800px-Jupiter_and_its_shrunken_Great_Red_Spot.jpg', caption: 'Jowisz i Wielka Czerwona Plama — Hubble, 2014' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Europa-moon-with-margins.jpg/800px-Europa-moon-with-margins.jpg', caption: 'Europa — lodowy księżyc z oceanem pod powierzchnią — Galileo, 1996' },
+      ],
+    },
+  },
+  {
+    id: 'saturn',
+    name: 'Saturn',
+    color: '#c8a96e',
+    size: 0.65,
+    position: [11.5, 0, 0],
+    labelOffset: [0, -0.95, 0],
+    orbitRadius: 11.5,
+    orbitSpeed: 0.022,
+    rotationSpeed: 0.15,
+    texturePath: '/textures/saturn.png',
+    ringTexturePath: '/textures/saturn-ring.png',
+    description:
+      'Saturn to król pierścieni — gazowy gigant otoczony rozbudowanym systemem lodowych i skalnych pierścieni rozciągających się na setki tysięcy kilometrów od planety.',
+    subtitle: 'Władca pierścieni Układu Słonecznego.',
+    fact: 'Saturn jest mniej gęsty niż woda — gdyby istniał wystarczająco duży ocean, planeta by na nim pływała.',
+    stats: [
+      { label: 'Doba', value: '10h 33m' },
+      { label: 'Księżyce', value: '146' },
+      { label: 'Gęstość', value: '0.69 g/cm³' },
+    ],
+    story: {
+      discovery: [
+        { year: 'Starożytność', event: 'Saturn obserwowany jako najdalszy z widocznych gołym okiem — Babilończycy i Grecy znali go jako „Kronosa".' },
+        { year: '1610', event: 'Galileusz przez teleskop widzi dziwny rozciągnięty kształt — myśli, że planeta ma „uszy".' },
+        { year: '1655', event: 'Christiaan Huygens wyjaśnia, że Saturn otoczony jest płaskim pierścieniem i odkrywa księżyc Tytan.' },
+        { year: '1675', event: 'Giovanni Cassini dostrzega podział między pierścieniami — dziś zwany Przerwą Cassiniego.' },
+        { year: '1979–81', event: 'Pioneer 11, Voyager 1 i 2 przesyłają pierwsze szczegółowe obrazy pierścieni i księżyców.' },
+        { year: '2004–2017', event: 'Sonda Cassini-Huygens spędza 13 lat na orbicie — odkrywa oceany ciekłej wody pod Enceladusem i jeziora metanu na Tytanie.' },
+        { year: '2017', event: 'Cassini kończy misję Grand Finale — zanurza się celowo w atmosferę Saturna.' },
+      ],
+      habitability: {
+        score: 3,
+        label: 'Niemożliwa do zamieszkania',
+        factors: [
+          { name: 'Temperatura', value: '-178°C (chmury)', rating: 'bad' },
+          { name: 'Atmosfera', value: 'Wodór 96%, hel 3%', rating: 'bad' },
+          { name: 'Powierzchnia', value: 'Brak stałej', rating: 'bad' },
+          { name: 'Grawitacja', value: '10.4 m/s² (106% Ziemi)', rating: 'bad' },
+          { name: 'Promieniowanie', value: 'Intensywne', rating: 'bad' },
+          { name: 'Ciśnienie', value: 'Ekstremalne w głębi', rating: 'bad' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/800px-Saturn_during_Equinox.jpg', caption: 'Saturn podczas równonocy — Cassini, 2009' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Enceladus_geysers_revised.jpg/800px-Enceladus_geysers_revised.jpg', caption: 'Gejzery wodne na Enceladusie — Cassini, 2006' },
+      ],
+    },
+  },
+  {
+    id: 'uranus',
+    name: 'Uran',
+    color: '#7de8e8',
+    size: 0.45,
+    position: [14.0, 0, 0],
+    labelOffset: [0, -0.75, 0],
+    orbitRadius: 14.0,
+    orbitSpeed: 0.015,
+    rotationSpeed: 0.10,
+    gradientColors: ['#a5f5f5', '#82e8ea', '#5ecede', '#68d4e2', '#82e0ec', '#a0f0f2'],
+    description:
+      'Uran to lodowy gigant o ekstremalnym nachyleniu osi obrotu — krąży wokół Słońca niemal „na boku", więc każdy biegun doświadcza 42-letnich dnia i nocy.',
+    subtitle: 'Lodowy gigant obracający się na boku.',
+    fact: 'Oś obrotu Urana jest nachylona o 97.77° — planeta toczy się wokół Słońca jak kula bilardowa.',
+    stats: [
+      { label: 'Rok', value: '84 lata' },
+      { label: 'Księżyce', value: '27' },
+      { label: 'Nachylenie', value: '97.77°' },
+    ],
+    story: {
+      discovery: [
+        { year: '1781', event: 'William Herschel odkrywa Urana 13 marca 1781 — pierwsza planeta odkryta przy użyciu teleskopu w nowożytnej historii.' },
+        { year: '1787–1851', event: 'Odkrycie pierwszych czterech księżyców: Tytanii i Oberona (Herschel, 1787) oraz Ariela i Umbriela (Lassell, 1851).' },
+        { year: '1977', event: 'Podczas okluzji gwiazdy odkryto pierścienie Urana — wąskie i ciemne, zupełnie inne od Saturna.' },
+        { year: '1986', event: 'Voyager 2 — jedyna sonda, która odwiedziła Urana — odkrywa 10 nowych księżyców i bada pierścienie.' },
+        { year: '1997–2003', event: 'Odkrycie kolejnych małych księżyców przy użyciu teleskopu Hubble\'a.' },
+        { year: '2033 (plan)', event: 'NASA planuje misję Uranus Orbiter and Probe — pierwszą dedykowaną orbitera dla lodowego giganta.' },
+      ],
+      habitability: {
+        score: 1,
+        label: 'Niemożliwa do zamieszkania',
+        factors: [
+          { name: 'Temperatura', value: '-224°C (chmury)', rating: 'bad' },
+          { name: 'Atmosfera', value: 'Metan, wodór, hel', rating: 'bad' },
+          { name: 'Powierzchnia', value: 'Brak stałej', rating: 'bad' },
+          { name: 'Grawitacja', value: '8.69 m/s² (89% Ziemi)', rating: 'bad' },
+          { name: 'Promieniowanie', value: 'Bardzo intensywne', rating: 'bad' },
+          { name: 'Ciśnienie', value: 'Kolosalne', rating: 'bad' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg', caption: 'Uran w barwach naturalnych — Voyager 2, 1986' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Uranus_rings_and_moons.jpg/800px-Uranus_rings_and_moons.jpg', caption: 'Pierścienie i księżyce Urana — Hubble, 2004' },
+      ],
+    },
+  },
+  {
+    id: 'neptune',
+    name: 'Neptun',
+    color: '#4b70dd',
+    size: 0.42,
+    position: [16.5, 0, 0],
+    labelOffset: [0, -0.75, 0],
+    orbitRadius: 16.5,
+    orbitSpeed: 0.010,
+    rotationSpeed: 0.10,
+    gradientColors: ['#182e70', '#254594', '#3a58bc', '#2d50aa', '#1e3c88', '#182e70'],
+    description:
+      'Neptun to najdalszy lodowy olbrzym Układu Słonecznego — ukryty świat szalejących wiatrów do 2100 km/h, odkryty jako pierwsza planeta drogą obliczeń matematycznych.',
+    subtitle: 'Najdalszy i najwetrzniejszy świat układu.',
+    fact: 'Wiatry na Neptunie osiągają 2100 km/h — najsilniejsze ze wszystkich planet Układu Słonecznego.',
+    stats: [
+      { label: 'Rok', value: '165 lat' },
+      { label: 'Księżyce', value: '16' },
+      { label: 'Wiatry', value: '2100 km/h' },
+    ],
+    story: {
+      discovery: [
+        { year: '1612–13', event: 'Galileusz obserwuje Neptuna, lecz zapisuje go jako nieruchomą gwiazdę — nie odkrywa go oficjalnie.' },
+        { year: '1846', event: 'Le Verrier (Francja) i Adams (Anglia) niezależnie przewidują orbitę na podstawie perturbacji Urana; Galle i d\'Arrest odkrywają planetę 23 września 1846.' },
+        { year: '1846', event: 'Zaledwie kilka tygodni po odkryciu William Lassell dostrzega Trytona — duży księżyc w ruchu wstecznym.' },
+        { year: '1989', event: 'Voyager 2 — jedyna sonda odwiedzająca Neptuna — odkrywa Wielką Ciemną Plamę i gejzery azotowe na Trytonie.' },
+        { year: '2013', event: 'Hubble odkrywa 14. księżyc Neptuna — S/2004 N 1, zaledwie 20 km średnicy.' },
+        { year: 'Przyszłość', event: 'Misja do Neptuna jest w fazie planowania — może wzorować się na misji Cassini.' },
+      ],
+      habitability: {
+        score: 0,
+        label: 'Niemożliwa do zamieszkania',
+        factors: [
+          { name: 'Temperatura', value: '-214°C (chmury)', rating: 'bad' },
+          { name: 'Atmosfera', value: 'Wodór, hel, metan', rating: 'bad' },
+          { name: 'Powierzchnia', value: 'Brak stałej', rating: 'bad' },
+          { name: 'Grawitacja', value: '11.15 m/s² (114% Ziemi)', rating: 'bad' },
+          { name: 'Wiatry', value: '2100 km/h', rating: 'bad' },
+          { name: 'Ciśnienie', value: 'Ekstremalne', rating: 'bad' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg/800px-Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg', caption: 'Neptun z Wielką Ciemną Plamą — Voyager 2, 1989' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Triton_moon_mosaic_Voyager_2_%2829347980650%29.jpg/800px-Triton_moon_mosaic_Voyager_2_%2829347980650%29.jpg', caption: 'Tryton — największy księżyc Neptuna z gejzerami azotowymi — Voyager 2, 1989' },
+      ],
+    },
+  },
+  {
+    id: 'pluto',
+    name: 'Pluton',
+    color: '#a08070',
+    size: 0.10,
+    position: [18.8, 0, 0],
+    labelOffset: [0, -0.42, 0],
+    orbitRadius: 18.8,
+    orbitSpeed: 0.007,
+    rotationSpeed: -0.04,
+    gradientColors: ['#8c6b52', '#a08060', '#c8a882', '#9c8870', '#7e6048', '#8c6b52'],
+    description:
+      'Pluton — planeta karłowata na skraju Układu Słonecznego — skrywa lodowe góry, azotowe równiny i serce kształtu serca odkryte przez New Horizons w 2015 roku.',
+    subtitle: 'Lodowy karzeł na rubieżach Układu Słonecznego.',
+    fact: 'New Horizons odkrył na Plutonie lodowe góry wysokości Alp i serce — Regio Tombaugh — płynące lodami azotowymi.',
+    stats: [
+      { label: 'Rok', value: '248 lat' },
+      { label: 'Księżyce', value: '5' },
+      { label: 'Typ', value: 'Planeta karłowata' },
+    ],
+    story: {
+      discovery: [
+        { year: '1930', event: 'Clyde Tombaugh odkrywa Plutona 18 lutego 1930 w obserwatorium Lowell w Arizonie po roku mozolnego przeszukiwania płyt fotograficznych.' },
+        { year: '1978', event: 'James Christy odkrywa Charona — księżyc prawie tak duży jak Pluton sam.' },
+        { year: '1988', event: 'Pomiary okluzji gwiazdy potwierdzają obecność cienkiej atmosfery z azotem i metanem.' },
+        { year: '2005', event: 'Teleskop Hubble\'a odkrywa Nix i Hydrę — dwa kolejne, mniejsze księżyce.' },
+        { year: '2006', event: 'Międzynarodowa Unia Astronomiczna reklasyfikuje Plutona jako „planetę karłowatą".' },
+        { year: '2015', event: 'New Horizons przelatuje 14 lipca w odległości 12 500 km — dostarcza pierwszych szczegółowych zdjęć: gór lodowych i serca Tombaugh Regio.' },
+      ],
+      habitability: {
+        score: 2,
+        label: 'Niemożliwa do zamieszkania',
+        factors: [
+          { name: 'Temperatura', value: '-230°C', rating: 'bad' },
+          { name: 'Atmosfera', value: 'Azot, metan (śladowa)', rating: 'bad' },
+          { name: 'Woda', value: 'Zamarznięta', rating: 'bad' },
+          { name: 'Grawitacja', value: '0.62 m/s² (6% Ziemi)', rating: 'bad' },
+          { name: 'Promieniowanie', value: 'Brak ochrony', rating: 'bad' },
+          { name: 'Ciśnienie', value: 'Bliskie zeru', rating: 'bad' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/800px-Pluto_in_True_Color_-_High-Res.jpg', caption: 'Pluton w prawdziwych kolorach z sercem Tombaugh Regio — New Horizons, 2015' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Charon_-_July_13_2015.jpg/800px-Charon_-_July_13_2015.jpg', caption: 'Charon — największy księżyc Plutona — New Horizons, 2015' },
+      ],
+    },
+  },
 ]
 
 const MOON_ORBIT_RADIUS = 0.65
@@ -277,6 +518,11 @@ const PLANET_DISTANCE_KM: Partial<Record<PlanetId, number>> = {
   earth: 149_600_000,
   moon: 149_984_400,
   mars: 227_900_000,
+  jupiter: 778_500_000,
+  saturn: 1_432_000_000,
+  uranus: 2_867_000_000,
+  neptune: 4_515_000_000,
+  pluto: 5_906_000_000,
 }
 
 function formatKm(km: number): string {
@@ -339,7 +585,7 @@ export default function App() {
       <section className="relative h-screen w-full overflow-hidden">
         <div className="absolute left-6 top-6 z-10">
           <p className="text-xs uppercase tracking-[0.45em] text-white/55">
-            Solar System
+            Solar System 3D
           </p>
         </div>
 
@@ -505,7 +751,7 @@ function Scene({
         enablePan={false}
         enableZoom={true}
         minDistance={0.3}
-        maxDistance={30}
+        maxDistance={55}
         minPolarAngle={0}
         maxPolarAngle={Math.PI}
         rotateSpeed={0.45}
@@ -767,6 +1013,9 @@ function SolarSystemScene({
               />
             </>
           )}
+          {planet.id === 'saturn' && (
+            <SaturnRing planetSize={planet.size} />
+          )}
         </AnimatedPlanet>
       ))}
     </group>
@@ -829,11 +1078,21 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
               onClick={onClick}
             />
           )
+        ) : planet.gradientColors ? (
+          <GradientSphere
+            size={planet.size}
+            gradientColors={planet.gradientColors}
+            color={color}
+            isActive={isActive}
+            onClick={onClick}
+          />
         ) : (
-          <mesh onClick={onClick} scale={isActive ? 1.12 : 1}>
-            <sphereGeometry args={[planet.size, 64, 64]} />
-            <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
-          </mesh>
+          <PlanetInteractive size={planet.size} color={color} isActive={isActive} onClick={onClick}>
+            <mesh>
+              <sphereGeometry args={[planet.size, 64, 64]} />
+              <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
+            </mesh>
+          </PlanetInteractive>
         )}
       </group>
       <Html position={planet.labelOffset} center distanceFactor={10}>
@@ -892,10 +1151,12 @@ function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef, hideLabel }
             onClick={onClick}
           />
         ) : (
-          <mesh onClick={onClick} scale={isActive ? 1.12 : 1}>
-            <sphereGeometry args={[moon.size, 32, 32]} />
-            <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
-          </mesh>
+          <PlanetInteractive size={moon.size} color={color} isActive={isActive} onClick={onClick}>
+            <mesh>
+              <sphereGeometry args={[moon.size, 32, 32]} />
+              <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
+            </mesh>
+          </PlanetInteractive>
         )}
       </group>
       <Html position={moon.labelOffset} center distanceFactor={10}>
@@ -905,6 +1166,66 @@ function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef, hideLabel }
           </div>
         )}
       </Html>
+    </group>
+  )
+}
+
+// ─── Planet Interactive Hover Wrapper ───────────────────────────────────────────────────
+
+function PlanetInteractive({
+  size,
+  color,
+  isActive,
+  noGlow = false,
+  onClick,
+  children,
+}: {
+  size: number
+  color: THREE.Color
+  isActive: boolean
+  noGlow?: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  const [hovered, setHovered] = useState(false)
+  const groupRef = useRef<THREE.Group>(null)
+  const glowMatRef = useRef<THREE.MeshBasicMaterial>(null)
+
+  useFrame((_, delta) => {
+    const k = 1 - Math.exp(-14 * delta)
+    if (groupRef.current) {
+      const target = isActive ? 1.12 : hovered ? 1.07 : 1
+      const curr = groupRef.current.scale.x
+      groupRef.current.scale.setScalar(curr + (target - curr) * k)
+    }
+    if (glowMatRef.current) {
+      const targetOpacity = hovered && !isActive ? 0.13 : 0
+      glowMatRef.current.opacity += (targetOpacity - glowMatRef.current.opacity) * k
+    }
+  })
+
+  return (
+    <group
+      ref={groupRef}
+      onClick={(e) => { e.stopPropagation(); onClick() }}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer' }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto' }}
+    >
+      {children}
+      {!noGlow && (
+        <mesh scale={1.38}>
+          <sphereGeometry args={[size, 24, 24]} />
+          <meshBasicMaterial
+            ref={glowMatRef}
+            color={color}
+            transparent
+            opacity={0}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
     </group>
   )
 }
@@ -932,17 +1253,19 @@ function TexturedSphere({
   texture.wrapT = THREE.RepeatWrapping
 
   return (
-    <mesh onClick={onClick} scale={isActive ? 1.12 : 1}>
-      <sphereGeometry args={[size, 64, 64]} />
-      <meshStandardMaterial
-        map={texture}
-        emissive={isSun ? planetColor : new THREE.Color('#000000')}
-        emissiveMap={isSun ? texture : undefined}
-        emissiveIntensity={isSun ? 1.5 : 0}
-        roughness={isSun ? 0.4 : 0.85}
-        metalness={0.02}
-      />
-    </mesh>
+    <PlanetInteractive size={size} color={planetColor} isActive={isActive} noGlow={isSun} onClick={onClick}>
+      <mesh>
+        <sphereGeometry args={[size, 64, 64]} />
+        <meshStandardMaterial
+          map={texture}
+          emissive={isSun ? planetColor : new THREE.Color('#000000')}
+          emissiveMap={isSun ? texture : undefined}
+          emissiveIntensity={isSun ? 1.5 : 0}
+          roughness={isSun ? 0.4 : 0.85}
+          metalness={0.02}
+        />
+      </mesh>
+    </PlanetInteractive>
   )
 }
 
@@ -987,9 +1310,10 @@ function EarthDayNightSphere({
   })
 
   return (
-    <mesh ref={meshRef} onClick={onClick} scale={isActive ? 1.12 : 1}>
-      <sphereGeometry args={[size, 64, 64]} />
-      <shaderMaterial
+    <PlanetInteractive size={size} color={new THREE.Color('#3b82f6')} isActive={isActive} onClick={onClick}>
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[size, 64, 64]} />
+        <shaderMaterial
         ref={matRef}
         uniforms={uniforms}
         vertexShader={`
@@ -1016,6 +1340,70 @@ function EarthDayNightSphere({
             gl_FragColor = mix(nightLit, day, blend);
           }
         `}
+      />
+      </mesh>
+    </PlanetInteractive>
+  )
+}
+
+function GradientSphere({
+  size,
+  gradientColors,
+  color,
+  isActive,
+  onClick,
+}: {
+  size: number
+  gradientColors: string[]
+  color: THREE.Color
+  isActive: boolean
+  onClick: () => void
+}) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')!
+    const grad = ctx.createLinearGradient(0, 0, 0, 256)
+    gradientColors.forEach((c, i) => {
+      grad.addColorStop(i / (gradientColors.length - 1), c)
+    })
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, 512, 256)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    return tex
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gradientColors.join(',')])
+
+  return (
+    <PlanetInteractive size={size} color={color} isActive={isActive} onClick={onClick}>
+      <mesh>
+        <sphereGeometry args={[size, 64, 64]} />
+        <meshStandardMaterial map={texture} roughness={0.8} metalness={0.02} />
+      </mesh>
+    </PlanetInteractive>
+  )
+}
+
+function SaturnRing({ planetSize }: { planetSize: number }) {
+  const texture = useTexture('/textures/saturn-ring.png')
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.wrapS = THREE.ClampToEdgeWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
+
+  const innerR = planetSize * 1.28
+  const outerR = planetSize * 2.4
+
+  return (
+    <mesh rotation={[-Math.PI / 2 + 0.44, 0, 0.22]}>
+      <ringGeometry args={[innerR, outerR, 128, 4]} />
+      <meshBasicMaterial
+        map={texture}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.92}
+        depthWrite={false}
       />
     </mesh>
   )
@@ -1126,9 +1514,14 @@ function SunGlow() {
 }
 
 function PlanetPreviewSphere({ planet }: { planet: PlanetData }) {
+  if (planet.texturePath) return <TexturedPreviewSphere planet={planet} />
+  return <GradientPreviewSphere planet={planet} />
+}
+
+function TexturedPreviewSphere({ planet }: { planet: PlanetData }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const color = new THREE.Color(planet.color)
-  const texture = useTexture(planet.texturePath ?? '')
+  const texture = useTexture(planet.texturePath!)
   texture.colorSpace = THREE.SRGBColorSpace
 
   useFrame((_, delta) => {
@@ -1148,6 +1541,38 @@ function PlanetPreviewSphere({ planet }: { planet: PlanetData }) {
         roughness={planet.id === 'sun' ? 0.4 : 0.85}
         metalness={0.02}
       />
+    </mesh>
+  )
+}
+
+function GradientPreviewSphere({ planet }: { planet: PlanetData }) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const texture = useMemo(() => {
+    const colors = planet.gradientColors ?? [planet.color, planet.color]
+    const canvas = document.createElement('canvas')
+    canvas.width = 512
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')!
+    const grad = ctx.createLinearGradient(0, 0, 0, 256)
+    colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c))
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, 512, 256)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    return tex
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planet.id])
+
+  useFrame((_, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.4
+    }
+  })
+
+  return (
+    <mesh ref={meshRef}>
+      <sphereGeometry args={[1, 64, 64]} />
+      <meshStandardMaterial map={texture} roughness={0.85} metalness={0.02} />
     </mesh>
   )
 }
