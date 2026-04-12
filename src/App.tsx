@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls, useTexture } from '@react-three/drei'
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 
@@ -271,9 +271,54 @@ const PLANETS: PlanetData[] = [
 
 const MOON_ORBIT_RADIUS = 0.65
 
+// Real average distances from the Sun in kilometres
+const PLANET_DISTANCE_KM: Partial<Record<PlanetId, number>> = {
+  mercury: 57_900_000,
+  earth: 149_600_000,
+  moon: 149_984_400,
+  mars: 227_900_000,
+}
+
+function formatKm(km: number): string {
+  if (km >= 1_000_000)
+    return `${(km / 1_000_000).toLocaleString('pl-PL', { maximumFractionDigits: 1 })} mln km`
+  if (km >= 1_000)
+    return `${(km / 1_000).toLocaleString('pl-PL', { maximumFractionDigits: 1 })} tys. km`
+  return `${km.toLocaleString('pl-PL')} km`
+}
+
 export default function App() {
   const [activePlanetId, setActivePlanetId] = useState<PlanetId | null>(null)
   const [storyPlanetId, setStoryPlanetId] = useState<PlanetId | null>(null)
+  const [muted, setMuted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    const audio = new Audio('/ambient/loop.mp3.mp3')
+    audio.loop = true
+    audio.volume = 0.07
+    audioRef.current = audio
+    const play = () => { audio.play().catch(() => {}) }
+    audio.play().catch(() => {
+      document.addEventListener('click', play, { once: true })
+    })
+    return () => {
+      audio.pause()
+      document.removeEventListener('click', play)
+    }
+  }, [])
+
+  const toggleMute = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (muted) {
+      audio.play().catch(() => {})
+      setMuted(false)
+    } else {
+      audio.pause()
+      setMuted(true)
+    }
+  }
 
   const activePlanet =
     PLANETS.find((planet) => planet.id === activePlanetId) ?? null
@@ -304,8 +349,29 @@ export default function App() {
           style={{ width: '100%', height: '100%' }}
           camera={{ position: [0, 10, 16], fov: 45 }}
         >
-          <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} />
+          <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} hideLabels={storyPlanetId !== null} />
         </Canvas>
+
+        {/* Mute / unmute button — bottom-left */}
+        <button
+          onClick={toggleMute}
+          title={muted ? 'Włącz muzykę' : 'Wycisz muzykę'}
+          className="absolute bottom-6 left-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
+        >
+          {muted ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            </svg>
+          )}
+        </button>
 
         <AnimatePresence>
           {activePlanet && (
@@ -335,7 +401,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <h2 className="text-4xl font-semibold tracking-[-0.04em]">
+                  <h2 className="font-orbitron text-3xl font-bold uppercase tracking-[0.06em]">
                     {activePlanet.name}
                   </h2>
                   <p className="mt-2 text-sm text-white/65">
@@ -401,9 +467,11 @@ export default function App() {
 function Scene({
   activePlanetId,
   onPlanetClick,
+  hideLabels,
 }: {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
+  hideLabels: boolean
 }) {
   const orbitControlsRef = useRef<any>(null)
   const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({})
@@ -420,6 +488,11 @@ function Scene({
       <SolarSystemScene
         activePlanetId={activePlanetId}
         onPlanetClick={onPlanetClick}
+        planetPositionsRef={planetPositionsRef}
+        hideLabels={hideLabels}
+      />
+      <PlanetDistanceLine
+        activePlanetId={activePlanetId}
         planetPositionsRef={planetPositionsRef}
       />
       <CameraController
@@ -475,6 +548,86 @@ function CameraController({
   })
 
   return null
+}
+
+// ─── Planet Distance Line ───────────────────────────────────────────────────
+
+function PlanetDistanceLine({
+  activePlanetId,
+  planetPositionsRef,
+}: {
+  activePlanetId: PlanetId | null
+  planetPositionsRef: { current: Record<string, THREE.Vector3> }
+}) {
+  const midGroupRef = useRef<THREE.Group>(null)
+  const posBuffer = useMemo(() => new Float32Array(6), [])
+
+  const planetForLine =
+    activePlanetId && activePlanetId !== 'sun'
+      ? PLANETS.find((p) => p.id === activePlanetId) ?? null
+      : null
+
+  const lineObj = useMemo(() => {
+    if (!planetForLine) return null
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(posBuffer, 3))
+    const mat = new THREE.LineDashedMaterial({
+      color: planetForLine.color,
+      dashSize: 0.22,
+      gapSize: 0.1,
+      opacity: 0.65,
+      transparent: true,
+    })
+    return new THREE.Line(geo, mat)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planetForLine?.id])
+
+  useFrame(() => {
+    if (!activePlanetId || activePlanetId === 'sun' || !lineObj) return
+    const pos = planetPositionsRef.current[activePlanetId]
+    if (!pos || !midGroupRef.current) return
+    posBuffer[3] = pos.x
+    posBuffer[4] = pos.y
+    posBuffer[5] = pos.z
+    ;(lineObj.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    lineObj.computeLineDistances()
+    midGroupRef.current.position.set(pos.x * 0.5, pos.y * 0.5 + 0.18, pos.z * 0.5)
+  })
+
+  if (!activePlanetId || activePlanetId === 'sun' || !planetForLine || !lineObj) return null
+
+  const km = PLANET_DISTANCE_KM[activePlanetId]
+
+  return (
+    <group>
+      <primitive object={lineObj} />
+      {km && (
+        <group ref={midGroupRef}>
+          <Html center distanceFactor={10} zIndexRange={[0, 10]}>
+            <div
+              style={{
+                background: 'rgba(2,5,11,0.82)',
+                border: `1px solid ${planetForLine.color}55`,
+                borderRadius: 8,
+                padding: '4px 10px',
+                color: '#fff',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                fontSize: 12,
+                lineHeight: 1.5,
+                backdropFilter: 'blur(6px)',
+                boxShadow: `0 0 10px ${planetForLine.color}33`,
+              }}
+            >
+              <span style={{ color: planetForLine.color, fontWeight: 700 }}>{formatKm(km)}</span>
+              <br />
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>od Słońca</span>
+            </div>
+          </Html>
+        </group>
+      )}
+    </group>
+  )
 }
 
 // ─── Sci-Fi Orbit Ring ────────────────────────────────────────────────────
@@ -567,12 +720,14 @@ type SolarSystemSceneProps = {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
+  hideLabels: boolean
 }
 
 function SolarSystemScene({
   activePlanetId,
   onPlanetClick,
   planetPositionsRef,
+  hideLabels,
 }: SolarSystemSceneProps) {
   const moonData = PLANETS.find((p) => p.id === 'moon')!
 
@@ -594,6 +749,7 @@ function SolarSystemScene({
           isActive={activePlanetId === planet.id}
           onClick={() => onPlanetClick(planet.id)}
           planetPositionsRef={planetPositionsRef}
+          hideLabel={hideLabels}
         >
           {planet.id === 'earth' && (
             <>
@@ -607,6 +763,7 @@ function SolarSystemScene({
                 isActive={activePlanetId === 'moon'}
                 onClick={() => onPlanetClick('moon')}
                 planetPositionsRef={planetPositionsRef}
+                hideLabel={hideLabels}
               />
             </>
           )}
@@ -622,9 +779,10 @@ type AnimatedPlanetProps = {
   onClick: () => void
   children?: ReactNode
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
+  hideLabel: boolean
 }
 
-function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRef }: AnimatedPlanetProps) {
+function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRef, hideLabel }: AnimatedPlanetProps) {
   const color = new THREE.Color(planet.color)
   const orbitRef = useRef<THREE.Group>(null)
   const selfRef = useRef<THREE.Group>(null)
@@ -679,9 +837,11 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
         )}
       </group>
       <Html position={planet.labelOffset} center distanceFactor={10}>
-        <div className="select-none whitespace-nowrap text-xs text-white/75 md:text-sm">
-          {planet.name}
-        </div>
+        {!hideLabel && (
+          <div className="font-orbitron select-none whitespace-nowrap text-[10px] uppercase tracking-[0.15em] text-white/75 md:text-xs">
+            {planet.name}
+          </div>
+        )}
       </Html>
       {children}
     </group>
@@ -693,9 +853,10 @@ type AnimatedMoonProps = {
   isActive: boolean
   onClick: () => void
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
+  hideLabel: boolean
 }
 
-function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef }: AnimatedMoonProps) {
+function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef, hideLabel }: AnimatedMoonProps) {
   const color = new THREE.Color(moon.color)
   const groupRef = useRef<THREE.Group>(null)
   const selfRef = useRef<THREE.Group>(null)
@@ -738,9 +899,11 @@ function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef }: AnimatedM
         )}
       </group>
       <Html position={moon.labelOffset} center distanceFactor={10}>
-        <div className="select-none whitespace-nowrap text-xs text-white/75 md:text-sm">
-          {moon.name}
-        </div>
+        {!hideLabel && (
+          <div className="font-orbitron select-none whitespace-nowrap text-[10px] uppercase tracking-[0.15em] text-white/75 md:text-xs">
+            {moon.name}
+          </div>
+        )}
       </Html>
     </group>
   )
@@ -1087,7 +1250,7 @@ function PlanetStoryOverlay({
         <p className="text-[10px] uppercase tracking-[0.45em] text-white/35">
           Historia i parametry
         </p>
-        <h1 className="mt-2 text-5xl font-semibold tracking-[-0.04em]">
+        <h1 className="font-orbitron mt-2 text-4xl font-bold uppercase tracking-[0.06em]">
           {planet.name}
         </h1>
         <p className="mt-3 max-w-md text-sm leading-7 text-white/55">
