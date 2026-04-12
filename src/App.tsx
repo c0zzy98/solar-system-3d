@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls, useTexture } from '@react-three/drei'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 
@@ -803,10 +803,8 @@ function CameraController({
       if (activePlanetId && activePlanetPos) {
         const planet = PLANETS.find(p => p.id === activePlanetId)!
         camZoomDist.current = Math.max(planet.size * 7.2, 3.6)
-        const dir = camera.position.clone().sub(activePlanetPos)
-        const len = dir.length()
-        if (len > 0.001) { dir.divideScalar(len) } else { dir.set(0.3, 0.5, 1).normalize() }
-        camZoomDir.current.copy(dir)
+        // Fixed canonical approach angle — consistent cinematic look, no A→B weirdness
+        camZoomDir.current.set(0.3, 0.6, 1.0).normalize()
       }
     }
 
@@ -1084,8 +1082,6 @@ function SolarSystemScene({
   planetPositionsRef,
   hideLabels,
 }: SolarSystemSceneProps) {
-  const moonData = PLANETS.find((p) => p.id === 'moon')!
-
   return (
     <group rotation={[0, 0, 0]}>
       {PLANETS.filter((p) => p.orbitRadius && p.id !== 'moon').map((planet) => (
@@ -1102,30 +1098,11 @@ function SolarSystemScene({
           key={planet.id}
           planet={planet}
           isActive={activePlanetId === planet.id}
-          onClick={() => onPlanetClick(planet.id)}
+          onPlanetClick={onPlanetClick}
+          moonIsActive={planet.id === 'earth' ? activePlanetId === 'moon' : false}
           planetPositionsRef={planetPositionsRef}
           hideLabel={hideLabels}
-        >
-          {planet.id === 'earth' && (
-            <>
-              <SciFiOrbitRing
-                radius={MOON_ORBIT_RADIUS}
-                color="#c8c8d8"
-                pulseSpeed={0.14}
-              />
-              <AnimatedMoon
-                moon={moonData}
-                isActive={activePlanetId === 'moon'}
-                onClick={() => onPlanetClick('moon')}
-                planetPositionsRef={planetPositionsRef}
-                hideLabel={hideLabels}
-              />
-            </>
-          )}
-          {planet.id === 'saturn' && (
-            <SaturnRing planetSize={planet.size} />
-          )}
-        </AnimatedPlanet>
+        />
       ))}
     </group>
   )
@@ -1134,14 +1111,16 @@ function SolarSystemScene({
 type AnimatedPlanetProps = {
   planet: PlanetData
   isActive: boolean
-  onClick: () => void
-  children?: ReactNode
+  onPlanetClick: (id: PlanetId) => void
+  moonIsActive: boolean
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
   hideLabel: boolean
 }
 
-function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRef, hideLabel }: AnimatedPlanetProps) {
-  const color = new THREE.Color(planet.color)
+const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanetClick, moonIsActive, planetPositionsRef, hideLabel }: AnimatedPlanetProps) {
+  const color = useMemo(() => new THREE.Color(planet.color), [planet.color])
+  const handleClick = useCallback(() => onPlanetClick(planet.id as PlanetId), [onPlanetClick, planet.id])
+  const moonData = useMemo(() => PLANETS.find(p => p.id === 'moon')!, [])
   const orbitRef = useRef<THREE.Group>(null)
   const selfRef = useRef<THREE.Group>(null)
   const angleRef = useRef(Math.random() * Math.PI * 2)
@@ -1175,7 +1154,7 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
             <EarthDayNightSphere
               size={planet.size}
               isActive={isActive}
-              onClick={onClick}
+              onClick={handleClick}
             />
           ) : (
             <TexturedSphere
@@ -1184,7 +1163,7 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
               isSun={planet.id === 'sun'}
               planetColor={color}
               isActive={isActive}
-              onClick={onClick}
+              onClick={handleClick}
             />
           )
         ) : planet.gradientColors ? (
@@ -1193,10 +1172,10 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
             gradientColors={planet.gradientColors}
             color={color}
             isActive={isActive}
-            onClick={onClick}
+            onClick={handleClick}
           />
         ) : (
-          <PlanetInteractive size={planet.size} color={color} isActive={isActive} onClick={onClick}>
+          <PlanetInteractive size={planet.size} color={color} isActive={isActive} onClick={handleClick}>
             <mesh>
               <sphereGeometry args={[planet.size, 64, 64]} />
               <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
@@ -1211,21 +1190,34 @@ function AnimatedPlanet({ planet, isActive, onClick, children, planetPositionsRe
           </div>
         )}
       </Html>
-      {children}
+      {planet.id === 'saturn' && <SaturnRing planetSize={planet.size} />}
+      {planet.id === 'earth' && (
+        <>
+          <SciFiOrbitRing radius={MOON_ORBIT_RADIUS} color="#c8c8d8" pulseSpeed={0.14} />
+          <AnimatedMoon
+            moon={moonData}
+            isActive={moonIsActive}
+            onPlanetClick={onPlanetClick}
+            planetPositionsRef={planetPositionsRef}
+            hideLabel={hideLabel}
+          />
+        </>
+      )}
     </group>
   )
-}
+})
 
 type AnimatedMoonProps = {
   moon: PlanetData
   isActive: boolean
-  onClick: () => void
+  onPlanetClick: (id: PlanetId) => void
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
   hideLabel: boolean
 }
 
-function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef, hideLabel }: AnimatedMoonProps) {
-  const color = new THREE.Color(moon.color)
+function AnimatedMoon({ moon, isActive, onPlanetClick, planetPositionsRef, hideLabel }: AnimatedMoonProps) {
+  const color = useMemo(() => new THREE.Color(moon.color), [moon.color])
+  const handleClick = useCallback(() => onPlanetClick('moon'), [onPlanetClick])
   const groupRef = useRef<THREE.Group>(null)
   const selfRef = useRef<THREE.Group>(null)
   const angleRef = useRef(Math.random() * Math.PI * 2)
@@ -1257,10 +1249,10 @@ function AnimatedMoon({ moon, isActive, onClick, planetPositionsRef, hideLabel }
             isSun={false}
             planetColor={color}
             isActive={isActive}
-            onClick={onClick}
+            onClick={handleClick}
           />
         ) : (
-          <PlanetInteractive size={moon.size} color={color} isActive={isActive} onClick={onClick}>
+          <PlanetInteractive size={moon.size} color={color} isActive={isActive} onClick={handleClick}>
             <mesh>
               <sphereGeometry args={[moon.size, 32, 32]} />
               <meshStandardMaterial color={color} roughness={0.95} metalness={0.02} />
