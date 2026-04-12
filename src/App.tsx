@@ -771,12 +771,19 @@ function CameraController({
   orbitControlsRef: { current: any }
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
 }) {
-  useThree()
-  const lerpedTarget = useRef(new THREE.Vector3())
-  const prevPlanetId = useRef<PlanetId | null>(null)
-  const zeroVec = useRef(new THREE.Vector3(0, 0, 0))
+  const { camera } = useThree()
+  const lerpedTarget  = useRef(new THREE.Vector3())
+  const prevPlanetId  = useRef<PlanetId | null>(null)
+  const zeroVec       = useRef(new THREE.Vector3(0, 0, 0))
 
-  useFrame(() => {
+  const camZooming   = useRef(false)
+  const camZoomProg  = useRef(0)
+  const camZoomFrom  = useRef(new THREE.Vector3())
+  const camZoomDir   = useRef(new THREE.Vector3(0.3, 0.5, 1))
+  const camZoomDist  = useRef(0)
+  const HOME_POS     = useRef(new THREE.Vector3(0, 10, 16))
+
+  useFrame((_, delta) => {
     const controls = orbitControlsRef.current
     if (!controls) return
 
@@ -785,14 +792,50 @@ function CameraController({
       : undefined
     const desiredTarget = activePlanetPos ?? zeroVec.current
 
+    // Detect selection change → kick off zoom
     if (activePlanetId !== prevPlanetId.current) {
       prevPlanetId.current = activePlanetId
       lerpedTarget.current.copy(controls.target)
+      camZoomFrom.current.copy(camera.position)
+      camZoomProg.current = 0
+      camZooming.current  = true
+
+      if (activePlanetId && activePlanetPos) {
+        const planet = PLANETS.find(p => p.id === activePlanetId)!
+        camZoomDist.current = Math.max(planet.size * 7.2, 3.6)
+        const dir = camera.position.clone().sub(activePlanetPos)
+        const len = dir.length()
+        if (len > 0.001) { dir.divideScalar(len) } else { dir.set(0.3, 0.5, 1).normalize() }
+        camZoomDir.current.copy(dir)
+      }
     }
 
+    // Always lerp the orbit target
     lerpedTarget.current.lerp(desiredTarget, 0.07)
     controls.target.copy(lerpedTarget.current)
-    controls.update()
+
+    if (camZooming.current) {
+      // Disable OrbitControls so it doesn't override camera position
+      controls.enabled = false
+
+      camZoomProg.current = Math.min(camZoomProg.current + delta * 1.8, 1)
+      const t = 1 - Math.pow(1 - camZoomProg.current, 3)
+
+      // Destination: planet pos + stored direction * distance
+      const dest = activePlanetId && activePlanetPos
+        ? activePlanetPos.clone().addScaledVector(camZoomDir.current, camZoomDist.current)
+        : HOME_POS.current.clone()
+
+      camera.position.lerpVectors(camZoomFrom.current, dest, t)
+      camera.lookAt(lerpedTarget.current)
+
+      if (camZoomProg.current >= 1) {
+        camZooming.current  = false
+        controls.enabled    = true
+      }
+    } else {
+      controls.update()
+    }
   })
 
   return null
