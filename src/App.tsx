@@ -622,12 +622,12 @@ export default function App() {
         <AnimatePresence>
           {activePlanet && (
             <motion.aside
-              key={activePlanet.id}
+              key="planet-panel"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 220 }}
-              className="absolute right-0 top-0 z-10 h-full w-full max-w-xs overflow-y-auto border-l border-white/10 bg-black/70 backdrop-blur-2xl sm:max-w-sm"
+              className="absolute right-0 top-0 z-10 h-full w-full max-w-xs overflow-y-auto border-l border-white/10 bg-black/70 backdrop-blur-md sm:max-w-sm"
             >
               <div className="flex flex-col gap-5 px-6 pb-10 pt-8">
                 {/* Header row: back button + label */}
@@ -851,7 +851,9 @@ function PlanetDistanceLine({
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
 }) {
   const midGroupRef = useRef<THREE.Group>(null)
-  const posBuffer = useMemo(() => new Float32Array(6), [])
+  const posBuffer   = useMemo(() => new Float32Array(6), [])
+  const prevPos     = useRef(new THREE.Vector3())
+  const MOVE_THRESHOLD_SQ = 0.0004 // only re-upload when planet moved >0.02 units
 
   const planetForLine =
     activePlanetId && activePlanetId !== 'sun'
@@ -877,6 +879,11 @@ function PlanetDistanceLine({
     if (!activePlanetId || activePlanetId === 'sun' || !lineObj) return
     const pos = planetPositionsRef.current[activePlanetId]
     if (!pos || !midGroupRef.current) return
+
+    // Skip GPU upload if planet hasn't moved enough
+    if (prevPos.current.distanceToSquared(pos) < MOVE_THRESHOLD_SQ) return
+    prevPos.current.copy(pos)
+
     posBuffer[3] = pos.x
     posBuffer[4] = pos.y
     posBuffer[5] = pos.z
@@ -897,7 +904,7 @@ function PlanetDistanceLine({
           <Html center distanceFactor={10} zIndexRange={[0, 10]}>
             <div
               style={{
-                background: 'rgba(2,5,11,0.82)',
+                background: 'rgba(2,5,11,0.90)',
                 border: `1px solid ${planetForLine.color}55`,
                 borderRadius: 8,
                 padding: '4px 10px',
@@ -906,7 +913,6 @@ function PlanetDistanceLine({
                 pointerEvents: 'none',
                 fontSize: 12,
                 lineHeight: 1.5,
-                backdropFilter: 'blur(6px)',
                 boxShadow: `0 0 10px ${planetForLine.color}33`,
               }}
             >
@@ -1633,11 +1639,6 @@ function SunGlow() {
   )
 }
 
-function PlanetPreviewSphere({ planet }: { planet: PlanetData }) {
-  if (planet.texturePath) return <TexturedPreviewSphere planet={planet} />
-  return <GradientPreviewSphere planet={planet} />
-}
-
 // ─── Shooting Comets ──────────────────────────────────────────────────────
 
 const MAX_COMETS = 7
@@ -1827,91 +1828,48 @@ function NebulaLayer() {
   )
 }
 
-function TexturedPreviewSphere({ planet }: { planet: PlanetData }) {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const color = new THREE.Color(planet.color)
-  const texture = useTexture(planet.texturePath!)
-  texture.colorSpace = THREE.SRGBColorSpace
+function PlanetCSSSphere({ planet, size }: { planet: PlanetData; size: number }) {
+  const shading = 'radial-gradient(ellipse at 68% 32%, transparent 20%, rgba(0,0,0,0.70) 100%)'
 
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.4
-    }
-  })
+  const baseStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    overflow: 'hidden',
+    flexShrink: 0,
+    position: 'relative',
+    boxShadow: `0 0 ${Math.round(size * 0.35)}px ${planet.color}55`,
+  }
 
+  if (planet.texturePath) {
+    return (
+      <div style={baseStyle}>
+        <img
+          src={planet.texturePath}
+          alt={planet.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: shading, borderRadius: '50%' }} />
+      </div>
+    )
+  }
+
+  const colors = planet.gradientColors ?? [planet.color, planet.color]
+  const mid    = colors[Math.floor(colors.length / 2)] ?? colors[0]
+  const end    = colors[colors.length - 1] ?? colors[0]
   return (
-    <mesh ref={meshRef}>
-      <sphereGeometry args={[1, 64, 64]} />
-      <meshStandardMaterial
-        map={texture}
-        emissive={planet.id === 'sun' ? color : new THREE.Color('#000000')}
-        emissiveMap={planet.id === 'sun' ? texture : undefined}
-        emissiveIntensity={planet.id === 'sun' ? 1.2 : 0}
-        roughness={planet.id === 'sun' ? 0.4 : 0.85}
-        metalness={0.02}
-      />
-    </mesh>
-  )
-}
-
-function GradientPreviewSphere({ planet }: { planet: PlanetData }) {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const texture = useMemo(() => {
-    const colors = planet.gradientColors ?? [planet.color, planet.color]
-    const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 256
-    const ctx = canvas.getContext('2d')!
-    const grad = ctx.createLinearGradient(0, 0, 0, 256)
-    colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c))
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, 512, 256)
-    const tex = new THREE.CanvasTexture(canvas)
-    tex.colorSpace = THREE.SRGBColorSpace
-    return tex
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planet.id])
-
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.4
-    }
-  })
-
-  return (
-    <mesh ref={meshRef}>
-      <sphereGeometry args={[1, 64, 64]} />
-      <meshStandardMaterial map={texture} roughness={0.85} metalness={0.02} />
-    </mesh>
+    <div style={{
+      ...baseStyle,
+      background: `radial-gradient(ellipse at 42% 32%, ${mid}, ${colors[0]} 55%, ${end} 100%)`,
+    }}>
+      <div style={{ position: 'absolute', inset: 0, background: shading, borderRadius: '50%' }} />
+    </div>
   )
 }
 
 function PlanetPreview({ planet }: { planet: PlanetData }) {
   const size = planet.id === 'sun' ? 140 : 120
-
-  return (
-    <div
-      className="self-start overflow-hidden rounded-full"
-      style={{
-        width: size,
-        height: size,
-        boxShadow: `0 0 40px ${planet.color}55`,
-      }}
-    >
-      <Canvas
-        style={{ width: '100%', height: '100%' }}
-        camera={{ position: [0, 0, 2.6], fov: 45 }}
-        gl={{ alpha: true }}
-      >
-        <ambientLight intensity={0.4} />
-        <pointLight position={[5, 5, 5]} intensity={20} color="#ffffff" />
-        {planet.id === 'sun' && (
-          <pointLight position={[0, 0, 0]} intensity={10} color="#f59e0b" />
-        )}
-        <PlanetPreviewSphere planet={planet} />
-      </Canvas>
-    </div>
-  )
+  return <PlanetCSSSphere planet={planet} size={size} />
 }
 
 function SectionHeader({ label }: { label: string }) {
@@ -1961,25 +1919,10 @@ function PlanetStoryOverlay({
         className="mx-auto flex max-w-3xl flex-col items-center px-6 pb-4 pt-20 text-center"
       >
         <div
-          className="mb-6 overflow-hidden rounded-full"
-          style={{
-            width: 160,
-            height: 160,
-            boxShadow: `0 0 80px ${planet.color}44`,
-          }}
+          className="mb-6"
+          style={{ boxShadow: `0 0 80px ${planet.color}44`, borderRadius: '50%' }}
         >
-          <Canvas
-            style={{ width: '100%', height: '100%' }}
-            camera={{ position: [0, 0, 2.6], fov: 45 }}
-            gl={{ alpha: true }}
-          >
-            <ambientLight intensity={0.4} />
-            <pointLight position={[5, 5, 5]} intensity={20} />
-            {planet.id === 'sun' && (
-              <pointLight position={[0, 0, 0]} intensity={10} color="#f59e0b" />
-            )}
-            <PlanetPreviewSphere planet={planet} />
-          </Canvas>
+          <PlanetCSSSphere planet={planet} size={160} />
         </div>
         <p className="text-[10px] uppercase tracking-[0.45em] text-white/35">
           Historia i parametry
