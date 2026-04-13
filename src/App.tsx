@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 
 type PlanetId = 'sun' | 'mercury' | 'earth' | 'moon' | 'mars' | 'jupiter' | 'saturn' | 'uranus' | 'neptune' | 'pluto'
+  | 'voyager1' | 'voyager2' | 'new-horizons' | 'parker'
 
 type HabitabilityRating = 'good' | 'ok' | 'bad'
 
@@ -36,6 +37,7 @@ type PlanetData = {
   fact: string
   stats: { label: string; value: string }[]
   story: PlanetStory
+  isProbe?: boolean
 }
 
 const PLANETS: PlanetData[] = [
@@ -508,6 +510,188 @@ const PLANETS: PlanetData[] = [
       ],
     },
   },
+  // ─── Probes ───────────────────────────────────────────────────────────────
+  {
+    id: 'parker',
+    name: 'Parker Solar Probe',
+    color: '#fb923c',
+    size: 0.055,
+    // ~0.07 AU — aktualnie w pobliżu Słońca (kwiecień 2026)
+    position: [0.82, 0.08, 0.38],
+    labelOffset: [0, -0.22, 0],
+    isProbe: true,
+    description:
+      'Parker Solar Probe to najszybszy obiekt stworzony przez człowieka. Nurkuje w koronę słoneczną, zbierając dane o wietrze słonecznym i polach magnetycznych.',
+    subtitle: 'Najszybszy i najbliżej Słońca — sonda NASA.',
+    fact: 'Parker osiągnął prędkość ponad 692 000 km/h — żaden wcześniejszy pojazd nie był szybszy.',
+    stats: [
+      { label: 'Start', value: '12.08.2018' },
+      { label: 'Prędkość', value: '692 000 km/h' },
+      { label: 'Dystans', value: '~0.07 AU' },
+    ],
+    story: {
+      discovery: [
+        { year: '2018', event: 'Start sondy Parker Solar Probe z Kennedy Space Center — misja NASA.' },
+        { year: '2021', event: 'Sonda jako pierwsza przelatuje przez koronę słoneczną na odległości 8.5 mln km od fotosf.' },
+        { year: '2024', event: 'Parker osiąga rekordową prędkość 692 000 km/h i zanurza się w koronę do odległości 6.1 mln km.' },
+        { year: '2026', event: 'Sonda kontynuuje kolejne przeloty peryhelialne, dostarczając dane o strukturze wiatru słonecznego.' },
+      ],
+      habitability: {
+        score: 0,
+        label: 'Artefakt — nie dotyczy',
+        factors: [
+          { name: 'Typ', value: 'Sonda naukowa', rating: 'bad' },
+          { name: 'Masa', value: '555 kg', rating: 'ok' },
+          { name: 'Tarcza termiczna', value: 'Węgiel, 1377°C', rating: 'bad' },
+          { name: 'Zasilanie', value: 'Panele fotowoltaiczne', rating: 'ok' },
+          { name: 'Łączność', value: 'Deep Space Network', rating: 'ok' },
+          { name: 'Misja', value: '2018 – ~2025', rating: 'ok' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Parker_Solar_Probe_spacecraft.jpg/800px-Parker_Solar_Probe_spacecraft.jpg', caption: 'Parker Solar Probe — wizualizacja artystyczna, NASA' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/800px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg', caption: 'Korona słoneczna w ultrafiolecie — NASA SDO' },
+      ],
+    },
+  },
+  {
+    id: 'new-horizons',
+    name: 'New Horizons',
+    color: '#818cf8',
+    size: 0.06,
+    // ~58 AU, kierunek ~302° od Słońca (kwiecień 2026)
+    // scale: sqrt(58/39.5)*18.8 ≈ 22.8; kierunek 302° = 5.27 rad
+    position: [12.1, 0.15, -19.4],
+    labelOffset: [0, -0.26, 0],
+    isProbe: true,
+    description:
+      'New Horizons to pierwsza sonda, która wykonała bliski przelot obok Plutona w 2015 roku. Teraz wędruje przez Pas Kuipera, badając lodowe obiekty na obrzeżach Układu Słonecznego.',
+    subtitle: 'Pierwsza sonda u granic Układu Słonecznego.',
+    fact: 'New Horizons sfotografował serce Plutona — Tombaugh Regio — z odległości zaledwie 12 500 km.',
+    stats: [
+      { label: 'Start', value: '19.01.2006' },
+      { label: 'Dystans', value: '~58 AU' },
+      { label: 'Prędkość', value: '14.1 km/s' },
+    ],
+    story: {
+      discovery: [
+        { year: '2006', event: 'Start New Horizons z przylądka Canaveral — najszybsza sonda startująca bezpośrednio w kosmos.' },
+        { year: '2007', event: 'Przelot obok Jowisza — sonda wykorzystuje grawitację planety do przyspieszenia.' },
+        { year: '2015', event: '14 lipca — historyczny przelot obok Plutona w odległości 12 500 km. Pierwsze szczegółowe zdjęcia.' },
+        { year: '2019', event: 'Przelot obok Arrokoth (2014 MU69) — najdalszy obiekt odwiedzony przez sondę kosmiczną.' },
+        { year: '2026', event: 'New Horizons kontynuuje podróż przez Pas Kuipera, ok. 58 AU od Słońca.' },
+      ],
+      habitability: {
+        score: 0,
+        label: 'Artefakt — nie dotyczy',
+        factors: [
+          { name: 'Typ', value: 'Sonda naukowa', rating: 'bad' },
+          { name: 'Masa', value: '478 kg', rating: 'ok' },
+          { name: 'Zasilanie', value: 'RTG plutonowy', rating: 'ok' },
+          { name: 'Łączność', value: 'Deep Space Network', rating: 'ok' },
+          { name: 'Instrumenty', value: 'LORRI, SWAP, ALICE', rating: 'ok' },
+          { name: 'Misja', value: '2006 – czynna', rating: 'good' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/800px-Pluto_in_True_Color_-_High-Res.jpg', caption: 'Pluton sfotografowany przez New Horizons, 2015' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/NH-Arrokoth-color-crshpnd.png/800px-NH-Arrokoth-color-crshpnd.png', caption: 'Arrokoth — kontaktowy obiekt Pasa Kuipera — New Horizons, 2019' },
+      ],
+    },
+  },
+  {
+    id: 'voyager2',
+    name: 'Voyager 2',
+    color: '#34d399',
+    size: 0.065,
+    // ~136 AU, kierunek ~290° (kwiecień 2026)
+    // scale: sqrt(136/39.5)*18.8 ≈ 34.9; cos(290°)=0.342, sin(290°)=-0.940
+    position: [-11.9, 0.7, 32.8],
+    labelOffset: [0, -0.28, 0],
+    isProbe: true,
+    description:
+      'Voyager 2 to jedyna sonda, która odwiedziła wszystkie cztery gazowe olbrzymy. W 2018 roku przekroczyła heliopauzę — granicę między wpływem Słońca a przestrzenią międzygwiezdną.',
+    subtitle: 'Jedyna sonda odwiedzająca wszystkie gazowe olbrzymy.',
+    fact: 'Voyager 2 odkrył 11 nowych księżyców Urana i 5 nowych księżycy Neptuna podczas jednej misji.',
+    stats: [
+      { label: 'Start', value: '20.08.1977' },
+      { label: 'Dystans', value: '~136 AU' },
+      { label: 'Prędkość', value: '15.4 km/s' },
+    ],
+    story: {
+      discovery: [
+        { year: '1977', event: 'Start Voyagera 2, 16 dni przed Voyagerem 1 — misja Grand Tour planet zewnętrznych.' },
+        { year: '1979', event: 'Przelot obok Jowisza — odkrycie aktywnych wulkanów na Io i pierścieni planety.' },
+        { year: '1981', event: 'Przelot obok Saturna — szczegółowe obrazy pierścieni i księżyców.' },
+        { year: '1986', event: 'Przelot obok Urana — odkrycie 11 nowych księżyców, pomiar pola magnetycznego.' },
+        { year: '1989', event: 'Przelot obok Neptuna — Wielka Ciemna Plama i gejzery azotowe na Trytonie.' },
+        { year: '2018', event: 'Voyager 2 przekracza heliopauzę — wchodzi w przestrzeń międzygwiezdną.' },
+        { year: '2026', event: 'Sygnał z sondy dociera do Ziemi po ~18,9 godziny. Zasilanie RTG stopniowo słabnie.' },
+      ],
+      habitability: {
+        score: 0,
+        label: 'Artefakt — nie dotyczy',
+        factors: [
+          { name: 'Typ', value: 'Sonda naukowa', rating: 'bad' },
+          { name: 'Masa', value: '722 kg', rating: 'ok' },
+          { name: 'Zasilanie', value: 'RTG plutonowy', rating: 'ok' },
+          { name: 'Łączność', value: 'Deep Space Network', rating: 'ok' },
+          { name: 'Instrumenty', value: 'PLS, MAG, PWS, UV', rating: 'ok' },
+          { name: 'Misja', value: '1977 – czynna', rating: 'good' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg/800px-Neptune_-_Voyager_2_%2829347980845%29_flatten_crop.jpg', caption: 'Neptun sfotografowany przez Voyagera 2, 1989' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Triton_moon_mosaic_Voyager_2_%2829347980650%29.jpg/800px-Triton_moon_mosaic_Voyager_2_%2829347980650%29.jpg', caption: 'Tryton — księżyc Neptuna z gejzerami — Voyager 2, 1989' },
+      ],
+    },
+  },
+  {
+    id: 'voyager1',
+    name: 'Voyager 1',
+    color: '#a78bfa',
+    size: 0.065,
+    // ~163 AU, kierunek ~255° (kwiecień 2026)
+    // scale: sqrt(163/39.5)*18.8 ≈ 38.2; cos(255°)=-0.259, sin(255°)=-0.966
+    position: [9.9, 1.2, 36.9],
+    labelOffset: [0, -0.28, 0],
+    isProbe: true,
+    description:
+      'Voyager 1 jest najdalej wysuniętym obiektem stworzonym przez człowieka. W 2012 roku jako pierwsza sonda weszła w przestrzeń międzygwiezdną, ponad 40 lat po starcie.',
+    subtitle: 'Najdalszy obiekt stworzony przez człowieka.',
+    fact: 'Sygnał radiowy z Voyagera 1 podróżuje do Ziemi przez ponad 22 godziny — z prędkością światła.',
+    stats: [
+      { label: 'Start', value: '05.09.1977' },
+      { label: 'Dystans', value: '~163 AU' },
+      { label: 'Prędkość', value: '17 km/s' },
+    ],
+    story: {
+      discovery: [
+        { year: '1977', event: 'Start Voyagera 1 — zaprojektowany głównie do badania Jowisza i Saturna.' },
+        { year: '1979', event: 'Przelot obok Jowisza — pierwsze obrazy aktywnych wulkanów na Io.' },
+        { year: '1980', event: 'Przelot obok Saturna — odkrycie złożonej struktury pierścieni Saturna i atmosfery Tytana.' },
+        { year: '1990', event: 'Na prośbę Carla Sagana sonda obraca się i fotografuje „Pale Blue Dot" — Ziemię z 6 mld km.' },
+        { year: '2012', event: 'Voyager 1 jako pierwszy obiekt ludzki przekracza heliopauzę — wchodzi w przestrzeń międzygwiezdną.' },
+        { year: '2026', event: 'Sygnał z sondy dociera do Ziemi po ~22,6 godziny. Czynne instrumenty PLS i MAG.' },
+      ],
+      habitability: {
+        score: 0,
+        label: 'Artefakt — nie dotyczy',
+        factors: [
+          { name: 'Typ', value: 'Sonda naukowa', rating: 'bad' },
+          { name: 'Masa', value: '722 kg', rating: 'ok' },
+          { name: 'Zasilanie', value: 'RTG plutonowy', rating: 'ok' },
+          { name: 'Łączność', value: 'Deep Space Network', rating: 'ok' },
+          { name: 'Zlatyczna płyta', value: 'Golden Record', rating: 'good' },
+          { name: 'Misja', value: '1977 – czynna', rating: 'good' },
+        ],
+      },
+      images: [
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Pale_Blue_Dot.png/800px-Pale_Blue_Dot.png', caption: '„Pale Blue Dot" — Ziemia sfotografowana przez Voyagera 1 z 6 mld km, 1990' },
+        { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Voyager_1_-_14_February_1990_%28pale_blue_dot_full_image%29.jpg/800px-Voyager_1_-_14_February_1990_%28pale_blue_dot_full_image%29.jpg', caption: 'Rodzinne zdjęcie Układu Słonecznego — Voyager 1, 1990' },
+      ],
+    },
+  },
 ]
 
 const MOON_ORBIT_RADIUS = 0.65
@@ -975,7 +1159,7 @@ function Scene({
         enablePan={false}
         enableZoom={true}
         minDistance={0.3}
-        maxDistance={55}
+        maxDistance={70}
         minPolarAngle={0}
         maxPolarAngle={Math.PI}
         rotateSpeed={0.45}
@@ -1306,7 +1490,7 @@ function SolarSystemScene({
 }: SolarSystemSceneProps) {
   return (
     <group rotation={[0, 0, 0]}>
-      {PLANETS.filter((p) => p.orbitRadius && p.id !== 'moon').map((planet) => (
+      {PLANETS.filter((p) => p.orbitRadius && p.id !== 'moon' && !p.isProbe).map((planet) => (
         <SciFiOrbitRing
           key={planet.id}
           radius={planet.orbitRadius!}
@@ -1371,7 +1555,14 @@ const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanet
   return (
     <group ref={orbitRef} position={initPos}>
       <group ref={selfRef}>
-        {planet.texturePath ? (
+        {planet.isProbe ? (
+          <ProbeMesh
+            size={planet.size}
+            color={color}
+            isActive={isActive}
+            onClick={handleClick}
+          />
+        ) : planet.texturePath ? (
           planet.id === 'earth' ? (
             <EarthDayNightSphere
               size={planet.size}
@@ -1407,7 +1598,7 @@ const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanet
       </group>
       <Html position={planet.labelOffset} center distanceFactor={10}>
         {!hideLabel && (
-          <div className="font-orbitron select-none whitespace-nowrap text-[10px] uppercase tracking-[0.15em] text-white/75 md:text-xs">
+          <div className={`font-orbitron select-none whitespace-nowrap text-[10px] uppercase tracking-[0.15em] md:text-xs ${planet.isProbe ? 'text-sky-400/80' : 'text-white/75'}`}>
             {planet.name}
           </div>
         )}
@@ -1494,6 +1685,104 @@ function AnimatedMoon({ moon, isActive, onPlanetClick, planetPositionsRef, hideL
 }
 
 // ─── Planet Interactive Hover Wrapper ───────────────────────────────────────────────────
+
+// ─── Probe Mesh (3D) ──────────────────────────────────────────────────────
+
+function ProbeMesh({
+  size,
+  color,
+  isActive,
+  onClick,
+}: {
+  size: number
+  color: THREE.Color
+  isActive: boolean
+  onClick: () => void
+}) {
+  const bodyRef    = useRef<THREE.Group>(null)
+  const beaconRef  = useRef<THREE.Mesh>(null)
+  const beaconMatRef = useRef<THREE.MeshBasicMaterial>(null)
+  const pulseRef   = useRef<THREE.Mesh>(null)
+  const pulseMatRef = useRef<THREE.MeshBasicMaterial>(null)
+
+  // Probes render at a fixed larger visual size so they're clearly visible
+  const vs = Math.max(size, 0.22)
+
+  useFrame(({ clock }, delta) => {
+    // Slow rotation of the body
+    if (bodyRef.current) {
+      bodyRef.current.rotation.y += delta * 0.6
+      bodyRef.current.rotation.x += delta * 0.25
+    }
+    const t = clock.getElapsedTime()
+    // Beacon pulse: opacity oscillates
+    if (beaconMatRef.current) {
+      beaconMatRef.current.opacity = 0.35 + Math.sin(t * 2.2) * 0.25
+    }
+    // Expanding ping ring
+    if (pulseRef.current && pulseMatRef.current) {
+      const s = 1 + ((t * 0.9) % 1) * 2.2
+      pulseRef.current.scale.setScalar(s)
+      pulseMatRef.current.opacity = Math.max(0, 0.55 - ((t * 0.9) % 1) * 0.55)
+    }
+  })
+
+  return (
+    <PlanetInteractive size={vs} color={color} isActive={isActive} onClick={onClick}>
+      {/* Expanding ping ring */}
+      <mesh ref={pulseRef} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[vs * 1.05, vs * 1.35, 32]} />
+        <meshBasicMaterial
+          ref={pulseMatRef}
+          color={color}
+          transparent
+          opacity={0.5}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Glow beacon sphere */}
+      <mesh ref={beaconRef}>
+        <sphereGeometry args={[vs * 1.6, 16, 16]} />
+        <meshBasicMaterial
+          ref={beaconMatRef}
+          color={color}
+          transparent
+          opacity={0.35}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Rotating body group */}
+      <group ref={bodyRef}>
+        {/* Main octahedron body */}
+        <mesh>
+          <octahedronGeometry args={[vs, 0]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={1.2}
+            roughness={0.2}
+            metalness={0.7}
+          />
+        </mesh>
+        {/* Dish antenna */}
+        <mesh position={[0, vs * 1.6, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[vs * 0.9, vs * 0.9, vs * 0.06, 12]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} side={THREE.DoubleSide} />
+        </mesh>
+        {/* Antenna mast */}
+        <mesh position={[0, vs * 0.85, 0]}>
+          <cylinderGeometry args={[vs * 0.04, vs * 0.04, vs * 1.4, 4]} />
+          <meshBasicMaterial color={color} />
+        </mesh>
+      </group>
+    </PlanetInteractive>
+  )
+}
 
 function PlanetInteractive({
   size,
@@ -2091,15 +2380,59 @@ function SolarSystem2D({
     ro.observe(canvas)
 
     // precompute stable references used every frame
-    const nonSunPlanets = ORBIT_PLANETS.filter(p => p.id !== 'sun')
-    const sunPlanet     = ORBIT_PLANETS.find(p => p.id === 'sun')!
-    const earthOrbitR   = ORBIT_PLANETS.find(p => p.id === 'earth')!.orbitRadius!
+    const nonSunPlanets   = ORBIT_PLANETS.filter(p => p.id !== 'sun' && !p.isProbe)
+    const probePlanets    = ORBIT_PLANETS.filter(p => p.isProbe)
+    const sunPlanet       = ORBIT_PLANETS.find(p => p.id === 'sun')!
+    const earthOrbitR     = ORBIT_PLANETS.find(p => p.id === 'earth')!.orbitRadius!
 
     const drawBody = (
       p: PlanetData,
       px: number, py: number, pr: number,
       isActive: boolean, dpr: number,
     ) => {
+      // ── Probe rendering ──────────────────────────────────────────────
+      if (p.isProbe) {
+        const s = pr * 1.8
+        ctx.save()
+        // Active ring
+        if (isActive) {
+          ctx.beginPath()
+          ctx.arc(px, py, s + 4 * dpr, 0, Math.PI * 2)
+          ctx.strokeStyle = p.color + 'aa'
+          ctx.lineWidth   = 1.5 * dpr
+          ctx.stroke()
+        }
+        // Diamond outline
+        ctx.beginPath()
+        ctx.moveTo(px,       py - s)
+        ctx.lineTo(px + s,   py)
+        ctx.lineTo(px,       py + s)
+        ctx.lineTo(px - s,   py)
+        ctx.closePath()
+        ctx.strokeStyle = p.color
+        ctx.lineWidth   = 1.5 * dpr
+        ctx.stroke()
+        ctx.fillStyle = p.color + '30'
+        ctx.fill()
+        // Cross-hair centre
+        ctx.beginPath()
+        ctx.moveTo(px - s * 0.5, py)
+        ctx.lineTo(px + s * 0.5, py)
+        ctx.moveTo(px, py - s * 0.5)
+        ctx.lineTo(px, py + s * 0.5)
+        ctx.strokeStyle = p.color + 'cc'
+        ctx.lineWidth   = dpr
+        ctx.stroke()
+        // Label
+        ctx.font      = `${Math.round(9 * dpr)}px monospace`
+        ctx.textAlign = 'center'
+        ctx.fillStyle = isActive ? p.color : p.color + 'bb'
+        ctx.fillText(p.name.toUpperCase(), px, py + s + 12 * dpr)
+        ctx.restore()
+        return
+      }
+
+      // ── Regular planet rendering ──────────────────────────────────────
       if (isActive) {
         ctx.beginPath()
         ctx.arc(px, py, pr + 5 * dpr, 0, Math.PI * 2)
@@ -2204,7 +2537,7 @@ function SolarSystem2D({
 
       const active = activeRef.current
 
-      // non-sun planets
+      // non-sun orbiting planets
       nonSunPlanets.forEach(p => {
         const a  = anglesRef.current[p.id] ?? 0
         const ox = p.orbitRadius! * scale
@@ -2214,6 +2547,19 @@ function SolarSystem2D({
         posRef.current[p.id] = { x: px, y: py, r: pr }
         drawBody(p, px, py, pr, active === p.id, dpr)
       })
+
+      // Probes — fixed positions, scaled to half the visible radius max
+      {
+        const probeScale = Math.min(w, h) * 0.48 / 42
+        probePlanets.forEach(p => {
+          const [px3, , pz3] = p.position
+          const ppx = cx + px3 * probeScale
+          const ppy = cy + pz3 * probeScale
+          const pr  = Math.max(5 * dpr, p.size * probeScale * 0.9)
+          posRef.current[p.id] = { x: ppx, y: ppy, r: pr }
+          drawBody(p, ppx, ppy, pr, active === p.id, dpr)
+        })
+      }
 
       // Moon (orbits Earth)
       const ma     = moonAngleRef.current
