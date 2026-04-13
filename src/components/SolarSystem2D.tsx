@@ -2,25 +2,36 @@ import React, { useCallback, useEffect, useRef } from 'react'
 import type { PlanetData, PlanetId } from '../data/planets'
 import { MOON_ORBIT_RADIUS, MOON_PLANET_DATA, ORBIT_PLANETS } from '../data/planets'
 
+const SAT_TARGETS_2D = [
+  { id: 'moon'         as PlanetId, label: 'Księżyc',     color: '#93c5fd', km: '384 400 km',   light: '~1,28 s świetlnych' },
+  { id: 'new-horizons' as PlanetId, label: 'New Horizons', color: '#818cf8', km: '~8,7 mld km',  light: '~8,05 h świetlnych' },
+  { id: 'voyager2'     as PlanetId, label: 'Voyager 2',    color: '#34d399', km: '~20,3 mld km', light: '~18,9 h świetlnych' },
+  { id: 'voyager1'     as PlanetId, label: 'Voyager 1',    color: '#a78bfa', km: '~24,4 mld km', light: '~22,6 h świetlnych' },
+]
+
 export function SolarSystem2D({
   activePlanetId,
   onPlanetClick,
   isRunningRef,
+  showEarthSatellites = false,
 }: {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
   isRunningRef: React.MutableRefObject<boolean>
+  showEarthSatellites?: boolean
 }) {
-  const canvasRef    = useRef<HTMLCanvasElement>(null)
-  const animRef      = useRef(0)
-  const anglesRef    = useRef<Partial<Record<PlanetId, number>>>({})
-  const moonAngleRef = useRef(Math.random() * Math.PI * 2)
-  const activeRef    = useRef(activePlanetId)
-  const posRef       = useRef<Partial<Record<PlanetId, { x: number; y: number; r: number }>>>({})
-  const lastTSRef    = useRef<number | null>(null)
+  const canvasRef          = useRef<HTMLCanvasElement>(null)
+  const animRef            = useRef(0)
+  const anglesRef          = useRef<Partial<Record<PlanetId, number>>>({})
+  const moonAngleRef       = useRef(Math.random() * Math.PI * 2)
+  const activeRef          = useRef(activePlanetId)
+  const showSatellitesRef  = useRef(showEarthSatellites)
+  const posRef             = useRef<Partial<Record<PlanetId, { x: number; y: number; r: number }>>>({})
+  const lastTSRef          = useRef<number | null>(null)
   const imgsRef      = useRef<Partial<Record<PlanetId, HTMLImageElement>>>({})
 
   useEffect(() => { activeRef.current = activePlanetId }, [activePlanetId])
+  useEffect(() => { showSatellitesRef.current = showEarthSatellites }, [showEarthSatellites])
 
   useEffect(() => {
     ORBIT_PLANETS.concat([MOON_PLANET_DATA]).forEach(p => {
@@ -239,6 +250,55 @@ export function SolarSystem2D({
       const moonR  = Math.max(3 * dpr, MOON_PLANET_DATA.size * scale * 0.68)
       posRef.current['moon'] = { x: moonPx, y: moonPy, r: moonR }
       drawBody(MOON_PLANET_DATA, moonPx, moonPy, moonR, active === 'moon', dpr)
+
+      // ── Satellite lines (Earth → Księżyc / probes) ──────────────────
+      if (showSatellitesRef.current) {
+        const earthPos = posRef.current['earth']
+        if (earthPos) {
+          SAT_TARGETS_2D.forEach(({ id, label, color, km, light }) => {
+            const tPos = posRef.current[id]
+            if (!tPos) return
+            // dashed line
+            ctx.save()
+            ctx.setLineDash([6 * dpr, 3 * dpr])
+            ctx.beginPath()
+            ctx.moveTo(earthPos.x, earthPos.y)
+            ctx.lineTo(tPos.x, tPos.y)
+            ctx.strokeStyle = color + 'aa'
+            ctx.lineWidth   = 1.2 * dpr
+            ctx.stroke()
+            ctx.restore()
+            // label box at midpoint
+            const lx      = (earthPos.x + tPos.x) / 2
+            const ly      = (earthPos.y + tPos.y) / 2
+            const fs      = 9 * dpr
+            const lineH   = 13 * dpr
+            const pad     = 5 * dpr
+            ctx.font = `${Math.round(fs)}px monospace`
+            ctx.textAlign = 'center'
+            const w1  = ctx.measureText(label).width
+            const w2  = ctx.measureText(km).width
+            const w3  = ctx.measureText(light).width
+            const bW  = Math.max(w1, w2, w3) + pad * 2
+            const bH  = lineH * 3 + pad * 2
+            const bX  = lx - bW / 2
+            const bY  = ly - bH / 2 - 6 * dpr
+            ctx.fillStyle   = 'rgba(2,5,11,0.88)'
+            ctx.strokeStyle = color + '44'
+            ctx.lineWidth   = dpr
+            ctx.beginPath()
+            ;(ctx as CanvasRenderingContext2D & { roundRect: (x:number,y:number,w:number,h:number,r:number)=>void }).roundRect(bX, bY, bW, bH, 4 * dpr)
+            ctx.fill()
+            ctx.stroke()
+            ctx.fillStyle = color
+            ctx.fillText(label, lx, bY + pad + lineH * 0.8)
+            ctx.fillStyle = 'rgba(255,255,255,0.82)'
+            ctx.fillText(km, lx, bY + pad + lineH * 1.8)
+            ctx.fillStyle = color + '88'
+            ctx.fillText(light, lx, bY + pad + lineH * 2.8)
+          })
+        }
+      }
 
       // Sun drawn last so its glow sits on top
       const sunR = Math.max(8 * dpr, sunPlanet.size * scale * 0.68)

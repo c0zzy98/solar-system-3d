@@ -77,6 +77,24 @@ export default function App() {
   const storyPlanet =
     PLANETS.find((planet) => planet.id === storyPlanetId) ?? null
 
+  const ORBITAL_SPEEDS: Partial<Record<PlanetId, { speed: string; unit: string; label: string }>> = {
+    sun:            { speed: '7 189',    unit: 'km/h', label: 'obrót równika' },
+    mercury:        { speed: '170 496', unit: 'km/h', label: 'orbita wokół Słońca' },
+    earth:          { speed: '107 208', unit: 'km/h', label: 'orbita wokół Słońca' },
+    moon:           { speed: '3 672',   unit: 'km/h', label: 'orbita wokół Ziemi' },
+    mars:           { speed: '86 652',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    jupiter:        { speed: '47 052',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    saturn:         { speed: '34 884',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    uranus:         { speed: '24 516',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    neptune:        { speed: '19 548',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    pluto:          { speed: '17 064',  unit: 'km/h', label: 'orbita wokół Słońca' },
+    parker:         { speed: '692 000', unit: 'km/h', label: 'rekord prędkości' },
+    'new-horizons': { speed: '50 760',  unit: 'km/h', label: 'Pas Kuipera' },
+    voyager2:       { speed: '55 440',  unit: 'km/h', label: 'przestrzeń międzygwiezdna' },
+    voyager1:       { speed: '61 200',  unit: 'km/h', label: 'przestrzeń międzygwiezdna' },
+  }
+  const speedData = activePlanet ? ORBITAL_SPEEDS[activePlanet.id] : null
+
   return (
     <div className="min-h-screen bg-[#02050b] text-white">
       <AnimatePresence>
@@ -92,10 +110,30 @@ export default function App() {
       </div>
 
       <section className="relative h-screen w-full overflow-hidden">
-        <div className="absolute left-6 top-6 z-10">
+        <div className="absolute left-6 top-6 z-10 flex flex-col gap-3">
           <p className="text-xs uppercase tracking-[0.45em] text-white/55">
             Solar System {is2D ? '2D' : '3D'}
           </p>
+
+          <AnimatePresence>
+            {speedData && (
+              <motion.div
+                key={activePlanetId}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="flex flex-col gap-0.5"
+              >
+                <p className="text-[9px] uppercase tracking-[0.4em] text-white/35">Prędkość</p>
+                <p className="font-orbitron text-xl font-bold tabular-nums text-white/90">
+                  {speedData.speed}
+                  <span className="ml-1 text-sm font-normal text-white/50">{speedData.unit}</span>
+                </p>
+                <p className="text-[10px] text-white/38">{speedData.label}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
 
@@ -105,6 +143,7 @@ export default function App() {
             activePlanetId={activePlanetId}
             onPlanetClick={setActivePlanetId}
             isRunningRef={isRunningRef}
+            showEarthSatellites={showEarthSatellites}
           />
         ) : (
           <Canvas
