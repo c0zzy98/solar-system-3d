@@ -513,7 +513,7 @@ export const PLANETS: PlanetData[] = [
     name: 'Parker Solar Probe',
     color: '#fb923c',
     size: 0.055,
-    position: [0.82, 0.08, 0.38],
+    position: [2.4, 0.35, 1.4],
     labelOffset: [0, -0.22, 0],
     isProbe: true,
     description:

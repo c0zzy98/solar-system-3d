@@ -6,7 +6,7 @@ const SAT_TARGETS_2D = [
   { id: 'moon'         as PlanetId, label: 'Księżyc',     color: '#93c5fd', km: '384 400 km',   light: '~1,28 s świetlnych' },
   { id: 'new-horizons' as PlanetId, label: 'New Horizons', color: '#818cf8', km: '~8,7 mld km',  light: '~8,05 h świetlnych' },
   { id: 'voyager2'     as PlanetId, label: 'Voyager 2',    color: '#34d399', km: '~20,3 mld km', light: '~18,9 h świetlnych' },
-  { id: 'voyager1'     as PlanetId, label: 'Voyager 1',    color: '#a78bfa', km: '~24,4 mld km', light: '~22,6 h świetlnych' },
+  { id: 'voyager1'     as PlanetId, label: 'Voyager 1',    color: '#a78bfa', km: '~24,4 mld km',  light: '~22,6 h świetlnych' },
 ]
 
 export function SolarSystem2D({
