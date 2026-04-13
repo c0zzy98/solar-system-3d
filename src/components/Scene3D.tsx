@@ -158,28 +158,40 @@ function PlanetDistanceLine({
   const prevPos     = useRef(new THREE.Vector3())
   const MOVE_THRESHOLD_SQ = 0.0004
 
-  const planetForLine =
-    activePlanetId && activePlanetId !== 'sun'
-      ? PLANETS.find((p) => p.id === activePlanetId) ?? null
-      : null
-
-  const lineObj = useMemo(() => {
-    if (!planetForLine) return null
+  // ── One-time lazy init ────────────────────────────────────────────────
+  // Geometry, material and Line are created ONCE for the lifetime of this
+  // component. Subsequent planet changes only update the material color
+  // imperatively — no new Three.js objects, no shader recompilation spike.
+  const lineRef = useRef<THREE.Line | null>(null)
+  const matRef  = useRef<THREE.LineDashedMaterial | null>(null)
+  if (!lineRef.current) {
     const geo = new THREE.BufferGeometry()
     geo.setAttribute('position', new THREE.BufferAttribute(posBuffer, 3))
     const mat = new THREE.LineDashedMaterial({
-      color: planetForLine.color,
+      color: '#c0c0c0',
       dashSize: 0.22,
       gapSize: 0.1,
       opacity: 0.65,
       transparent: true,
     })
-    return new THREE.Line(geo, mat)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planetForLine?.id])
+    lineRef.current = new THREE.Line(geo, mat)
+    matRef.current  = mat
+  }
+
+  const planetForLine =
+    activePlanetId && activePlanetId !== 'sun'
+      ? PLANETS.find((p) => p.id === activePlanetId) ?? null
+      : null
+
+  // Imperatively update color — O(1), no allocation, no GPU reupload
+  const prevColorId = useRef<string | null>(null)
+  if (planetForLine?.id !== prevColorId.current) {
+    prevColorId.current = planetForLine?.id ?? null
+    matRef.current!.color.set(planetForLine?.color ?? '#c0c0c0')
+  }
 
   useFrame(() => {
-    if (!activePlanetId || activePlanetId === 'sun' || !lineObj) return
+    if (!activePlanetId || activePlanetId === 'sun') return
     const pos = planetPositionsRef.current[activePlanetId]
     if (!pos || !midGroupRef.current) return
 
@@ -189,19 +201,21 @@ function PlanetDistanceLine({
     posBuffer[3] = pos.x
     posBuffer[4] = pos.y
     posBuffer[5] = pos.z
-    ;(lineObj.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
-    lineObj.computeLineDistances()
+    ;(lineRef.current!.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    lineRef.current!.computeLineDistances()
     midGroupRef.current.position.set(pos.x * 0.5, pos.y * 0.5 + 0.18, pos.z * 0.5)
   })
 
-  if (!activePlanetId || activePlanetId === 'sun' || !planetForLine || !lineObj) return null
+  const km = activePlanetId && activePlanetId !== 'sun'
+    ? PLANET_DISTANCE_KM[activePlanetId]
+    : null
 
-  const km = PLANET_DISTANCE_KM[activePlanetId]
-
+  // Always render the same <primitive> — stable object ref means R3F never
+  // removes/re-adds it to the scene graph. Hide via `visible` prop instead.
   return (
     <group>
-      <primitive object={lineObj} />
-      {km && (
+      <primitive object={lineRef.current} visible={planetForLine !== null} />
+      {planetForLine && km && (
         <group ref={midGroupRef}>
           <Html center distanceFactor={10} zIndexRange={[0, 10]}>
             <div
@@ -294,7 +308,7 @@ type SolarSystemSceneProps = {
   isRunningRef: React.MutableRefObject<boolean>
 }
 
-function SolarSystemScene({
+const SolarSystemScene = memo(function SolarSystemScene({
   activePlanetId,
   onPlanetClick,
   planetPositionsRef,
@@ -326,7 +340,7 @@ function SolarSystemScene({
       ))}
     </group>
   )
-}
+})
 
 type AnimatedPlanetProps = {
   planet: PlanetData

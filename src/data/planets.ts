@@ -48,7 +48,7 @@ export const PLANETS: PlanetData[] = [
     texturePath: '/textures/sun.png',
     rotationSpeed: 0.02,
     description:
-      'Słońce jest centralnym punktem całego experience. To od niego zaczyna się układ i to ono buduje najmocniejszy akcent wizualny w hero.',
+      'Słońce to żółty karzeł — gwiazda w połowie swojego 10-miliardowego życia. W jej jądrze co sekundę 600 milionów ton wodoru ulega fuzji w hel, wyzwalając energię, która po 8 minutach dociera do Ziemi jako światło i ciepło. Korona słoneczna, rozgrzana do ponad miliona stopni, wciąż pozostaje jedną z największych zagadek astrofizyki.',
     subtitle: 'Centralna gwiazda układu i główne źródło światła.',
     fact: 'Słońce zawiera ponad 99% masy całego Układu Słonecznego.',
     stats: [
@@ -141,7 +141,7 @@ export const PLANETS: PlanetData[] = [
     orbitSpeed: 0.10,
     rotationSpeed: 0.09,
     description:
-      'Ziemia jest najlepszym kandydatem pod najbardziej dopracowaną sekcję premium. Dobrze wygląda w 3D i świetnie nadaje się do storytellingu.',
+      'Ziemia to jedyne znane miejsce we wszechświecie, gdzie powstało życie. Cienka warstwa atmosfery — zaledwie 0,008% promienia planety — chroni powierzchnię przed promieniowaniem kosmicznym i stabilizuje temperaturę. Pole magnetyczne generowane przez ciekłe żelazne jądro odchyla wiatr słoneczny, a ruch tektoniczny płyt nieustannie przebudowuje kontynenty od miliardów lat.',
     subtitle: 'Najbardziej rozpoznawalna planeta układu.',
     fact: 'To jedyna znana planeta, na której istnieje życie.',
     stats: [
@@ -186,7 +186,7 @@ export const PLANETS: PlanetData[] = [
     orbitRadius: 4.85,
     texturePath: '/textures/moon.png',
     description:
-      'Księżyc dobrze działa jako chłodniejszy, bardziej spokojny wizualnie blok. Jasny obiekt i ciemne tło dają fajny kontrast.',
+      'Księżyc powstał około 4,5 miliarda lat temu w wyniku zderzenia młodej Ziemi z protoplanetą wielkości Marsa. Od tamtej pory stopniowo oddala się od Ziemi w tempie 3,8 cm rocznie. Jego grawitacyjne oddziaływanie stabilizuje nachylenie osi obrotu naszej planety, co bezpośrednio wpływa na stabilność klimatu umożliwiającą rozwój życia.',
     subtitle: 'Naturalny satelita Ziemi.',
     fact: 'Księżyc stabilizuje oś obrotu Ziemi i wpływa na pływy.',
     stats: [
