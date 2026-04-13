@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls, useTexture } from '@react-three/drei'
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 
@@ -32,6 +32,7 @@ type PlanetData = {
   texturePath?: string
   ringTexturePath?: string
   gradientColors?: string[]
+  probeImagePath?: string
   description: string
   subtitle: string
   fact: string
@@ -564,6 +565,7 @@ const PLANETS: PlanetData[] = [
     position: [12.1, 0.15, -19.4],
     labelOffset: [0, -0.26, 0],
     isProbe: true,
+    probeImagePath: '/sondy/newhorizons.png',
     description:
       'New Horizons to pierwsza sonda, która wykonała bliski przelot obok Plutona w 2015 roku. Teraz wędruje przez Pas Kuipera, badając lodowe obiekty na obrzeżach Układu Słonecznego.',
     subtitle: 'Pierwsza sonda u granic Układu Słonecznego.',
@@ -609,6 +611,7 @@ const PLANETS: PlanetData[] = [
     position: [-11.9, 0.7, 32.8],
     labelOffset: [0, -0.28, 0],
     isProbe: true,
+    probeImagePath: '/sondy/voyager2.png',
     description:
       'Voyager 2 to jedyna sonda, która odwiedziła wszystkie cztery gazowe olbrzymy. W 2018 roku przekroczyła heliopauzę — granicę między wpływem Słońca a przestrzenią międzygwiezdną.',
     subtitle: 'Jedyna sonda odwiedzająca wszystkie gazowe olbrzymy.',
@@ -656,6 +659,7 @@ const PLANETS: PlanetData[] = [
     position: [9.9, 1.2, 36.9],
     labelOffset: [0, -0.28, 0],
     isProbe: true,
+    probeImagePath: '/sondy/voyager1.png',
     description:
       'Voyager 1 jest najdalej wysuniętym obiektem stworzonym przez człowieka. W 2012 roku jako pierwsza sonda weszła w przestrzeń międzygwiezdną, ponad 40 lat po starcie.',
     subtitle: 'Najdalszy obiekt stworzony przez człowieka.',
@@ -922,9 +926,17 @@ export default function App() {
   const [activePlanetId, setActivePlanetId] = useState<PlanetId | null>(null)
   const [storyPlanetId, setStoryPlanetId] = useState<PlanetId | null>(null)
   const [muted, setMuted] = useState(false)
+  const [volume, setVolume] = useState(0.07)
   const [is2D, setIs2D] = useState(false)
+  const [isRunning, setIsRunning] = useState(true)
+  const isRunningRef = useRef(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const handleLoadDone = useCallback(() => setLoaded(true), [])
+
+  const toggleRunning = useCallback(() => {
+    isRunningRef.current = !isRunningRef.current
+    setIsRunning(v => !v)
+  }, [])
 
   useEffect(() => {
     const audio = new Audio('/ambient/loop.mp3.mp3')
@@ -945,10 +957,26 @@ export default function App() {
     const audio = audioRef.current
     if (!audio) return
     if (muted) {
+      audio.volume = volume
       audio.play().catch(() => {})
       setMuted(false)
     } else {
+      audio.volume = 0
       audio.pause()
+      setMuted(true)
+    }
+  }
+
+  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value)
+    setVolume(v)
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = v
+    if (v > 0 && muted) {
+      audio.play().catch(() => {})
+      setMuted(false)
+    } else if (v === 0 && !muted) {
       setMuted(true)
     }
   }
@@ -985,45 +1013,91 @@ export default function App() {
           <SolarSystem2D
             activePlanetId={activePlanetId}
             onPlanetClick={setActivePlanetId}
+            isRunningRef={isRunningRef}
           />
         ) : (
           <Canvas
             style={{ width: '100%', height: '100%' }}
             camera={{ position: [0, 10, 16], fov: 45 }}
           >
-            <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} hideLabels={storyPlanetId !== null} />
+            <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} hideLabels={storyPlanetId !== null} isRunningRef={isRunningRef} />
           </Canvas>
         )}
 
-        {/* Mute / unmute button — bottom-left */}
-        <button
-          onClick={toggleMute}
-          title={muted ? 'Włącz muzykę' : 'Wycisz muzykę'}
-          className="absolute bottom-6 left-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
-        >
-          {muted ? (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-              <line x1="23" y1="9" x2="17" y2="15" />
-              <line x1="17" y1="9" x2="23" y2="15" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-            </svg>
-          )}
-        </button>
+        {/* Mute / volume control — bottom-left */}
+        <div className="absolute bottom-6 left-6 z-20 flex items-center gap-2">
+          <button
+            onClick={toggleMute}
+            title={muted ? 'Włącz muzykę' : 'Wycisz muzykę'}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
+          >
+            {muted || volume === 0 ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : volume < 0.4 ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg>
+            )}
+          </button>
+          <div className="flex h-10 items-center rounded-full border border-white/15 bg-black/50 px-3 backdrop-blur-md">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={muted ? 0 : volume}
+              onChange={handleVolume}
+              className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/20 accent-white/70"
+              title="Głośność"
+            />
+          </div>
+        </div>
 
         {/* 2D / 3D toggle */}
         <button
           onClick={() => { setIs2D(v => !v); setActivePlanetId(null) }}
           title={is2D ? 'Przełącz na tryb 3D' : 'Przełącz na tryb 2D'}
-          className="absolute bottom-6 left-20 z-20 flex h-10 items-center rounded-full border border-white/15 bg-black/50 px-4 text-[11px] font-medium uppercase tracking-[0.25em] text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
+          className="absolute bottom-6 left-52 z-20 flex h-10 items-center rounded-full border border-white/15 bg-black/50 px-4 text-[11px] font-medium uppercase tracking-[0.25em] text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
         >
           {is2D ? '3D' : '2D'}
         </button>
+
+        {/* Start / Pause animation */}
+        <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 flex gap-2">
+          <button
+            onClick={toggleRunning}
+            title={isRunning ? 'Zatrzymaj obrót' : 'Wznów obrót'}
+            className="flex h-10 items-center gap-2 rounded-full border border-white/15 bg-black/50 px-5 text-[11px] font-medium uppercase tracking-[0.25em] text-white/60 backdrop-blur-md transition hover:border-white/35 hover:text-white/90"
+          >
+            {isRunning ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+                Pause
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Start
+              </>
+            )}
+          </button>
+        </div>
 
         <AnimatePresence>
           {activePlanet && (
@@ -1120,10 +1194,12 @@ function Scene({
   activePlanetId,
   onPlanetClick,
   hideLabels,
+  isRunningRef,
 }: {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
   hideLabels: boolean
+  isRunningRef: React.MutableRefObject<boolean>
 }) {
   const orbitControlsRef = useRef<any>(null)
   const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({})
@@ -1144,6 +1220,7 @@ function Scene({
         onPlanetClick={onPlanetClick}
         planetPositionsRef={planetPositionsRef}
         hideLabels={hideLabels}
+        isRunningRef={isRunningRef}
       />
       <PlanetDistanceLine
         activePlanetId={activePlanetId}
@@ -1480,6 +1557,7 @@ type SolarSystemSceneProps = {
   onPlanetClick: (id: PlanetId) => void
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
   hideLabels: boolean
+  isRunningRef: React.MutableRefObject<boolean>
 }
 
 function SolarSystemScene({
@@ -1487,6 +1565,7 @@ function SolarSystemScene({
   onPlanetClick,
   planetPositionsRef,
   hideLabels,
+  isRunningRef,
 }: SolarSystemSceneProps) {
   return (
     <group rotation={[0, 0, 0]}>
@@ -1508,6 +1587,7 @@ function SolarSystemScene({
           moonIsActive={planet.id === 'earth' ? activePlanetId === 'moon' : false}
           planetPositionsRef={planetPositionsRef}
           hideLabel={hideLabels}
+          isRunningRef={isRunningRef}
         />
       ))}
     </group>
@@ -1521,9 +1601,10 @@ type AnimatedPlanetProps = {
   moonIsActive: boolean
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
   hideLabel: boolean
+  isRunningRef: React.MutableRefObject<boolean>
 }
 
-const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanetClick, moonIsActive, planetPositionsRef, hideLabel }: AnimatedPlanetProps) {
+const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanetClick, moonIsActive, planetPositionsRef, hideLabel, isRunningRef }: AnimatedPlanetProps) {
   const color = useMemo(() => new THREE.Color(planet.color), [planet.color])
   const handleClick = useCallback(() => onPlanetClick(planet.id as PlanetId), [onPlanetClick, planet.id])
   const moonData = useMemo(() => PLANETS.find(p => p.id === 'moon')!, [])
@@ -1532,6 +1613,7 @@ const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanet
   const angleRef = useRef(Math.random() * Math.PI * 2)
 
   useFrame((_, delta) => {
+    if (!isRunningRef.current) return
     if (planet.orbitRadius && planet.orbitSpeed && orbitRef.current) {
       angleRef.current += delta * planet.orbitSpeed
       orbitRef.current.position.x = Math.cos(angleRef.current) * planet.orbitRadius
@@ -1561,6 +1643,7 @@ const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanet
             color={color}
             isActive={isActive}
             onClick={handleClick}
+            isRunningRef={isRunningRef}
           />
         ) : planet.texturePath ? (
           planet.id === 'earth' ? (
@@ -1613,6 +1696,7 @@ const AnimatedPlanet = memo(function AnimatedPlanet({ planet, isActive, onPlanet
             onPlanetClick={onPlanetClick}
             planetPositionsRef={planetPositionsRef}
             hideLabel={hideLabel}
+            isRunningRef={isRunningRef}
           />
         </>
       )}
@@ -1626,9 +1710,10 @@ type AnimatedMoonProps = {
   onPlanetClick: (id: PlanetId) => void
   planetPositionsRef: { current: Record<string, THREE.Vector3> }
   hideLabel: boolean
+  isRunningRef: React.MutableRefObject<boolean>
 }
 
-function AnimatedMoon({ moon, isActive, onPlanetClick, planetPositionsRef, hideLabel }: AnimatedMoonProps) {
+function AnimatedMoon({ moon, isActive, onPlanetClick, planetPositionsRef, hideLabel, isRunningRef }: AnimatedMoonProps) {
   const color = useMemo(() => new THREE.Color(moon.color), [moon.color])
   const handleClick = useCallback(() => onPlanetClick('moon'), [onPlanetClick])
   const groupRef = useRef<THREE.Group>(null)
@@ -1636,6 +1721,7 @@ function AnimatedMoon({ moon, isActive, onPlanetClick, planetPositionsRef, hideL
   const angleRef = useRef(Math.random() * Math.PI * 2)
 
   useFrame((_, delta) => {
+    if (!isRunningRef.current) return
     if (groupRef.current) {
       angleRef.current += delta * 0.42
       groupRef.current.position.x = Math.cos(angleRef.current) * MOON_ORBIT_RADIUS
@@ -1693,11 +1779,13 @@ function ProbeMesh({
   color,
   isActive,
   onClick,
+  isRunningRef,
 }: {
   size: number
   color: THREE.Color
   isActive: boolean
   onClick: () => void
+  isRunningRef: React.MutableRefObject<boolean>
 }) {
   const bodyRef    = useRef<THREE.Group>(null)
   const beaconRef  = useRef<THREE.Mesh>(null)
@@ -1710,7 +1798,7 @@ function ProbeMesh({
 
   useFrame(({ clock }, delta) => {
     // Slow rotation of the body
-    if (bodyRef.current) {
+    if (bodyRef.current && isRunningRef.current) {
       bodyRef.current.rotation.y += delta * 0.6
       bodyRef.current.rotation.x += delta * 0.25
     }
@@ -2336,9 +2424,11 @@ function NebulaLayer() {
 function SolarSystem2D({
   activePlanetId,
   onPlanetClick,
+  isRunningRef,
 }: {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
+  isRunningRef: React.MutableRefObject<boolean>
 }) {
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const animRef      = useRef(0)
@@ -2510,11 +2600,11 @@ function SolarSystem2D({
 
       // update orbit angles
       ORBIT_PLANETS.forEach(p => {
-        if (p.orbitRadius && p.orbitSpeed) {
+        if (p.orbitRadius && p.orbitSpeed && isRunningRef.current) {
           anglesRef.current[p.id] = (anglesRef.current[p.id] ?? 0) + delta * p.orbitSpeed
         }
       })
-      moonAngleRef.current += delta * 0.42
+      if (isRunningRef.current) moonAngleRef.current += delta * 0.42
 
       const earthAngle = anglesRef.current['earth'] ?? 0
       const ePx = cx + Math.cos(earthAngle) * earthOrbitR * scale
@@ -2679,6 +2769,18 @@ function PlanetCSSSphere({ planet, size }: { planet: PlanetData; size: number })
 }
 
 function PlanetPreview({ planet }: { planet: PlanetData }) {
+  if (planet.probeImagePath) {
+    return (
+      <div className="overflow-hidden rounded-xl" style={{ boxShadow: `0 0 28px ${planet.color}44` }}>
+        <img
+          src={planet.probeImagePath}
+          alt={planet.name}
+          className="w-full object-cover"
+          style={{ maxHeight: 180 }}
+        />
+      </div>
+    )
+  }
   const size = planet.id === 'sun' ? 140 : 120
   return <PlanetCSSSphere planet={planet} size={size} />
 }
