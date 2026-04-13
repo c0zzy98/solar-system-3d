@@ -16,6 +16,7 @@ export default function App() {
   const [is2D, setIs2D] = useState(false)
   const [isRunning, setIsRunning] = useState(true)
   const isRunningRef = useRef(true)
+  const [showEarthSatellites, setShowEarthSatellites] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const handleLoadDone = useCallback(() => setLoaded(true), [])
 
@@ -38,6 +39,10 @@ export default function App() {
       document.removeEventListener('click', play)
     }
   }, [])
+
+  useEffect(() => {
+    if (activePlanetId !== 'earth') setShowEarthSatellites(false)
+  }, [activePlanetId])
 
   const toggleMute = () => {
     const audio = audioRef.current
@@ -106,7 +111,7 @@ export default function App() {
             style={{ width: '100%', height: '100%' }}
             camera={{ position: [0, 10, 16], fov: 45 }}
           >
-            <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} hideLabels={storyPlanetId !== null} isRunningRef={isRunningRef} />
+            <Scene activePlanetId={activePlanetId} onPlanetClick={setActivePlanetId} hideLabels={storyPlanetId !== null} isRunningRef={isRunningRef} showEarthSatellites={showEarthSatellites} />
           </Canvas>
         )}
 
@@ -252,6 +257,18 @@ export default function App() {
                   </p>
                 </div>
 
+                {activePlanet.id === 'earth' && (
+                  <button
+                    onClick={() => setShowEarthSatellites(v => !v)}
+                    className={`w-full rounded-xl border py-3 text-sm font-medium tracking-[0.06em] transition ${
+                      showEarthSatellites
+                        ? 'border-blue-400/40 bg-blue-500/15 text-blue-300'
+                        : 'border-white/15 bg-white/6 text-white/80 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {showEarthSatellites ? 'Ukryj satelity ×' : 'Wskaż satelity →'}
+                  </button>
+                )}
                 <button
                   onClick={() => setStoryPlanetId(activePlanet.id)}
                   className="mt-1 w-full rounded-xl border border-white/15 bg-white/6 py-3 text-sm font-medium tracking-[0.06em] text-white/80 transition hover:bg-white/10 hover:text-white"

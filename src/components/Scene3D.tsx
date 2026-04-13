@@ -19,11 +19,13 @@ export function Scene({
   onPlanetClick,
   hideLabels,
   isRunningRef,
+  showEarthSatellites,
 }: {
   activePlanetId: PlanetId | null
   onPlanetClick: (id: PlanetId) => void
   hideLabels: boolean
   isRunningRef: React.MutableRefObject<boolean>
+  showEarthSatellites: boolean
 }) {
   const orbitControlsRef = useRef<any>(null)
   const planetPositionsRef = useRef<Record<string, THREE.Vector3>>({})
@@ -50,6 +52,9 @@ export function Scene({
         activePlanetId={activePlanetId}
         planetPositionsRef={planetPositionsRef}
       />
+      {showEarthSatellites && (
+        <EarthSatelliteLines planetPositionsRef={planetPositionsRef} />
+      )}
       <CameraController
         activePlanetId={activePlanetId}
         orbitControlsRef={orbitControlsRef}
@@ -242,6 +247,137 @@ function PlanetDistanceLine({
     </group>
   )
 }
+
+// ── data for every Earth → satellite line ───────────────────────────────────
+const SATELLITE_TARGETS = [
+  {
+    id: 'moon',
+    label: 'Księżyc',
+    color: '#93c5fd',
+    km: '384 400 km',
+    light: '~1,28 s świetlnych',
+    dashSize: 0.11,
+    gapSize: 0.055,
+  },
+  {
+    id: 'new-horizons',
+    label: 'New Horizons',
+    color: '#818cf8',
+    km: '~8,7 mld km',
+    light: '~8,05 h świetlnych',
+    dashSize: 0.28,
+    gapSize: 0.14,
+  },
+  {
+    id: 'voyager2',
+    label: 'Voyager 2',
+    color: '#34d399',
+    km: '~20,3 mld km',
+    light: '~18,9 h świetlnych',
+    dashSize: 0.28,
+    gapSize: 0.14,
+  },
+  {
+    id: 'voyager1',
+    label: 'Voyager 1',
+    color: '#a78bfa',
+    km: '~24,4 mld km',
+    light: '~22,6 h świetlnych',
+    dashSize: 0.28,
+    gapSize: 0.14,
+  },
+] as const
+
+function SatelliteLine({
+  id: targetId,
+  label,
+  color,
+  km,
+  light,
+  dashSize,
+  gapSize,
+  planetPositionsRef,
+}: (typeof SATELLITE_TARGETS)[number] & {
+  planetPositionsRef: { current: Record<string, THREE.Vector3> }
+}) {
+  const lineRef   = useRef<THREE.Line | null>(null)
+  const midRef    = useRef<THREE.Group>(null)
+  const posBuf    = useMemo(() => new Float32Array(6), [])
+  const prevEarth = useRef(new THREE.Vector3(9999, 0, 0))
+  const prevPos   = useRef(new THREE.Vector3(9999, 0, 0))
+
+  if (!lineRef.current) {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(posBuf, 3))
+    lineRef.current = new THREE.Line(
+      geo,
+      new THREE.LineDashedMaterial({ color, dashSize, gapSize, opacity: 0.70, transparent: true }),
+    )
+  }
+
+  useFrame(() => {
+    const earth  = planetPositionsRef.current['earth']
+    const target = planetPositionsRef.current[targetId]
+    if (!earth || !target || !lineRef.current) return
+    const earthMoved  = prevEarth.current.distanceToSquared(earth)  > 0.00001
+    const targetMoved = prevPos.current.distanceToSquared(target) > 0.00004
+    if (!earthMoved && !targetMoved) return
+    prevEarth.current.copy(earth)
+    prevPos.current.copy(target)
+    posBuf[0] = earth.x;  posBuf[1] = earth.y;  posBuf[2] = earth.z
+    posBuf[3] = target.x; posBuf[4] = target.y; posBuf[5] = target.z
+    ;(lineRef.current.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    lineRef.current.computeLineDistances()
+    if (midRef.current) {
+      midRef.current.position.set(
+        (earth.x + target.x) * 0.5,
+        (earth.y + target.y) * 0.5 + 0.18,
+        (earth.z + target.z) * 0.5,
+      )
+    }
+  })
+
+  return (
+    <group>
+      <primitive object={lineRef.current} />
+      <group ref={midRef}>
+        <Html center distanceFactor={10} zIndexRange={[0, 15]}>
+          <div
+            style={{
+              background: 'rgba(2,5,11,0.90)',
+              border: `1px solid ${color}44`,
+              borderRadius: 9,
+              padding: '5px 12px',
+              color: '#fff',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              fontSize: 11,
+              lineHeight: 1.7,
+            }}
+          >
+            <div style={{ color, fontWeight: 700, marginBottom: 1 }}>{label}</div>
+            <div style={{ color: 'rgba(255,255,255,0.82)', fontSize: 11 }}>{km}</div>
+            <div style={{ color: `${color}88`, fontSize: 10 }}>{light}</div>
+          </div>
+        </Html>
+      </group>
+    </group>
+  )
+}
+
+const EarthSatelliteLines = memo(function EarthSatelliteLines({
+  planetPositionsRef,
+}: {
+  planetPositionsRef: { current: Record<string, THREE.Vector3> }
+}) {
+  return (
+    <>
+      {SATELLITE_TARGETS.map((t) => (
+        <SatelliteLine key={t.id} {...t} planetPositionsRef={planetPositionsRef} />
+      ))}
+    </>
+  )
+})
 
 function SciFiOrbitRing({
   radius,
